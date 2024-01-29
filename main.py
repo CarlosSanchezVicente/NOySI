@@ -2,6 +2,7 @@
 import pandas as pd
 
 # IMPORT FUNCTIONS FROM MODULES
+from modules import read_directory as rd
 from modules import electrical_measurement as elecm
 
 
