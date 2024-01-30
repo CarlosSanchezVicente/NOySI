@@ -80,7 +80,7 @@ def extract_data_tdms_methane(tdms_file, name_file):
     # Create the dataframe
     exec(f"{name_file} = pd.DataFrame(data)")
 
-    # --Code to test and check de process--
+    # --Code to test and check the process--
     # Extract the column names of dataframe
     # exec(f'columns_name = {name_file}.columns.values')
     # Extract the shape of dataframe
