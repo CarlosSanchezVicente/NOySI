@@ -5,6 +5,7 @@ import os   # Import data from directory
 from nptdms import TdmsFile   # Import tdms files
 
 
+
 # AUXILIARY FUNCTIONS
 def read_directory_tdms(directory):
     """Summary: function to read names of files in the directory
@@ -109,5 +110,4 @@ def read_tdms(directory):
         extract_data_tdms_methane(tdms_file, row['name'])
 
 
-    return data_df
-    
+    #return data_df

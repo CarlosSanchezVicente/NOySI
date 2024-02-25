@@ -8,8 +8,7 @@ from nptdms import TdmsFile   # Import tdms files
 
 # MAIN FUNCTIONS
 def read_tdms_file():
-
-    for 
+    #for 
         # Read the TDMS file
             tdms_file = TdmsFile.read(complete_path)
 

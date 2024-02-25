@@ -1,0 +1,232 @@
+--------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------    NOTION    ----------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
+MATERIALS DATABASE
+    BRONZE (dataframe)                  SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+
+	-- Description product	
+								  ->    ID                                 													Create this variable (use the dataframe index)	                  
+    id (object)                   ->    id_material (VARCHAR)
+	Título (object)               ->   	name_material (VARCHAR)
+	Etiquetas (object)            ->    label (VARCHAR)
+	parent (object)               ->    parent (VARCHAR)
+	url (object)	              ->    url (VARCHAR)
+
+	-- Researcher and manufacturer
+	Realizado (object)            ->    realized_by (VARCHAR)					None: commercial materials
+	Fabricante (object)           ->    manufacturer (VARCHAR)
+	Tipo (object)                 ->    material_type (VARCHAR)
+	created_by (object)           ->    record_created_by (VARCHAR)
+	last_edited_by (object)       ->    record_last_edited_by (VARCHAR)
+
+	-- Date
+	created_time (object)         ->    record_created_time (TIMESTAMP)														Transform to datetime
+	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
+	Preparación (object)          ->    preparation_date (TIMESTAMP)       		None: commercial materials					Transform to datetime
+
+	-- Percentage and ratio
+	Otros compuestos (object)     ->    others_compounds (VARCHAR)				None: no other compounds
+	% N (float)                   ->    n_percentage (FLOAT)               		None: unknown information					Transform to float
+	% H (float)                   ->    h_percentage (FLOAT)               		None: unknown information					Transform to float
+	% O (float)                   ->    o_percentage (FLOAT)               		None: unknown information
+	% Compuesto Princ. (object)   ->    main_comp_percentage (FLOAT)     		None: unknown information					Transform to float. In case there is a range, use the mean of two values.
+
+	-- Material characteristics
+	BET (m2/g) (float)            ->    bet_m2_g (FLOAT)						None: unknown information
+	Espesor (object)              ->    thickness_nm (INT)            			None: unknown information					Delete the unit (1 nm)
+	Tamaño (object)               ->    size_material_nm (INT)          		None: unknown information					Delete simbols from the number and the unit (< 50 nm)
+	Proporción (object)           ->    ratio (VARCHAR)							None: unknown information
+
+
+----------------------------------------------------------
+SOLUTIONS DATABASE
+    BRONZE (dataframe)                  SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+
+	-- Description product
+								  ->    ID                                 													Create this variable (use the dataframe index)	                  
+    id (object)                   ->    id_solution (VARCHAR)
+	Título (object)               ->    name_solution (VARCHAR)
+	Etiquetas (object)            ->    label (VARCHAR)
+	parent (object)               ->    parent (VARCHAR)
+	url (object)	              ->    url (VARCHAR)
+
+	-- Researcher and manufacturer
+	Realizado (object)            ->    realized_by (VARCHAR)
+	created_by (object)           ->    record_created_by (VARCHAR)
+	last_edited_by (object)       ->    record_last_edited_by (VARCHAR)
+
+	-- Date
+	created_time (object)         ->    record_created_time (TIMESTAMP)         											Transform to datetime
+	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
+	Preparación (object)          ->    preparation_date (TIMESTAMP)       													Transform to datetime
+
+	-- Percentage and ratio
+	Concentración (object)        ->    ratio_materials (VARCHAR)
+
+	-- Solution's component
+	Disolvente (object)           ->    id_solvent (VARCHAR)
+	Soluto (object)               ->    id_solute (VARCHAR)
+	Dopante (object)              ->    id_dopant (VARCHAR)						None: no dopant is used
+	Sensor (object)               ->    id_sensor (VARCHAR)
+
+
+----------------------------------------------------------
+SENSORS DATABASE
+    BRONZE (dataframe)                  SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+
+	-- Description product
+								  ->    ID                                 													Create this variable (use the dataframe index)	                  
+    id (object)                   ->    id_sensor (VARCHAR)
+	Título (object)               ->    name_sensor (VARCHAR)
+	Etiquetas (object)            ->    label (VARCHAR)
+	parent (object)               ->    parent (VARCHAR)
+	url (object)	              ->	url (VARCHAR)
+
+	-- Researcher and manufacturer
+	Realizado (object)            ->    realized_by (VARCHAR)
+	Tipo                          ->    sensor_type (VARCHAR)
+	created_by (object)           ->    record_created_by (VARCHAR)
+	last_edited_by (object)       ->    record_last_edited_by (VARCHAR)
+
+	-- Date
+	created_time (object)         ->    record_created_time (TIMESTAMP)         											Transform to datetime
+	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
+
+	-- Deposition parameters
+	Método dep. (object)   		  ->   	deposition_method (VARCHAR)				None: commercial sensors
+	Membrana 1 (object)   		  ->   	susbtrate_1 (VARCHAR)					None: commercial sensors
+	Membrana 2 (object)			  ->   	susbtrate_2 (VARCHAR)					None: this membrane isn't deposited
+	Membrana 3 (object)			  ->   	susbtrate_3 (VARCHAR)					None: this membrane isn't deposited
+	Membrana 1 (object)			  ->   	susbtrate_4 (VARCHAR)					None: this membrane isn't deposited
+	Disol. empleadas (object)	  ->   	solutions_used (VARCHAR)				None: commercial sensors					I don't know but this column probably will be remove from there
+	Parámetros dep. (object)   	  ->   	deposition_parameters  (VARCHAR)		None: commercial sensors
+ 
+
+----------------------------------------------------------
+LEDS DATABASE
+    BRONZE (dataframe)             	    SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+
+	-- Description product
+								  ->    ID                                 													Create this variable (use the dataframe index)	                  
+    id (object)                   ->    id_led (VARCHAR)
+	Led (object)        -         ->    name_led (VARCHAR)
+	parent (object)               ->    parent (VARCHAR)
+	url (object)	              ->    url (VARCHAR)
+
+	-- Researcher and manufacturer
+	created_by (object)           ->    record_created_by (VARCHAR)
+	last_edited_by (object)       ->    record_last_edited_by (VARCHAR)
+
+	-- Date
+	created_time (object)         ->	record_created_time (TIMESTAMP)         											Transform to datetime
+	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime												Transform to datetime
+
+	-- Led characteristics
+	V/A utilizado (object)		  ->	voltage_V_used (FLOAT)																Split 'V/A utilizado' column in two parts and take the voltage - Transform to float
+	V/A utilizado (object)		  ->  	current_mA_used (FLOAT)																Split 'V/A utilizado' column in two parts and take the current - Transform to float
+	Voltaje	(object)			  ->	voltage_range (VARCHAR)																I have to think about to split the column in high and low values - In this case, transform to float
+	Corriente (object)			  ->	current_range (VARCHAR)																I have to think about to split the column in high and low values - In this case, transform to float
+	Long. onda (object)			  ->	wavelength_nm (FLOAT)																Remove the unit and transform to float
+	Potencia Óptica (object)	  ->	optical_power_mW (FLOAT)															Remove the unit and transform to float
+	Comentarios (object)		  ->	comments   (VARCHAR)					None: comment not entered by the user
+
+
+----------------------------------------------------------
+GASES DATABASE
+    BRONZE (dataframe)             	    SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+
+	-- Description product
+								  ->    ID                                 													Create this variable (use the dataframe index)	                  
+    id (object)                   ->    id_gas (VARCHAR)
+	Título (object)               ->    name_gas (VARCHAR)
+	Etiquetas (object)            ->    label (VARCHAR)
+	parent (object)               ->    parent (VARCHAR)
+	url (object)	              ->    url (VARCHAR)
+
+	-- Researcher and manufacturer
+	created_by (object)           ->    record_created_by (VARCHAR)
+	last_edited_by (object)       ->    record_last_edited_by (VARCHAR)
+
+	-- Date
+	created_time (object)         ->	record_created_time (TIMESTAMP)         											Transform to datetime
+	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
+
+	-- Led characteristics
+	Max. Concetración (object)	  ->	max_concentration (FLOAT)				None: if permeation tubing is used			Remove the unit and transform to float
+
+
+----------------------------------------------------------
+MEASUREMENTS DATABASE
+    BRONZE (dataframe)             	    SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+
+	-- Description product
+								  ->    ID                                 													Create this variable (use the dataframe index)	                  
+    id (object)                   ->    id_measurement (VARCHAR)
+	Título (object)               ->    name_measurement (VARCHAR)
+	Gas (object)            	  ->    label (VARCHAR)							None: due to measurement without gas
+	parent (object)               ->    parent (VARCHAR)
+	url (object)	              ->    url (VARCHAR)
+
+	-- Researcher and manufacturer
+	Realizado (object)            ->    realized_by (VARCHAR)
+	created_by (object)           ->    record_created_by (VARCHAR)
+	last_edited_by (object)       ->    record_last_edited_by (VARCHAR)
+
+	-- Date
+	created_time (object)         ->	record_created_time (TIMESTAMP)         											Transform to datetime
+	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
+
+	-- Measurement characteristics
+	Concentraciones	(object)	  ->	concetrations_ppb (VARCHAR)															
+	Humedad	(object)			  ->	humidity_percentage (FLOAT)															Remove the '%' symbol and transform to float
+	Equipo medida (object)		  ->	measurement_equipment (VARCHAR)
+	Resultado (object)			  ->	result_measurement (VARCHAR)			None: date not entered by the user
+	Línea (object)				  ->	gases_line_used (VARCHAR)															If there are 2 or more gases, sort them in alphabetical order
+	-- Relations
+	Sensor (object)				  ->	id_sensor (VARCHAR)
+	Led	(object)				  ->	id_led (VARCHAR)						None: due to measurement without led
+	Gases (object)				  ->	id_gases (VARCHAR)						None: due to measurement without gas
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------    ELECTRICAL DATA    -------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------
+METHANE LINE DATABASE
+    BRONZE (dataframe)             	    SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+
+	-- Description product
+	Measurement [#] (float)			->	ID (INT)																			Transform to int
+	Time [s] (float)				->	time_s (FLOAT)
+	R1 [ohm] (float)				-> 	sensor1_ohm (FLOAT)
+	R2 [ohm] (float)				->	sensor1_ohm (FLOAT)
+	R3 [ohm] (float)				->	sensor1_ohm (FLOAT)
+	R4 [ohm] (float)				->	sensor1_ohm (FLOAT)
+	[Botella 1-Nada] [ppbv] (float)	->	bottle1_ppb (FLOAT)
+	[Botella 2-CO2] [ppbv] (float)	->	bottle2_ppb (FLOAT)
+	[Botella 3-Nada] [ppbv] (float)	->	bottle3_ppb (FLOAT)
+	Time Stamp (object)				->	date (TIMESTAMP)																	Transform to timestamp
+	Temperature [ºC] (float)		->	temperature_C (FLOAT)
+	V Heating R1 [mV] (float)		->	sensor1_heat_mV (FLOAT)																Round with two decimals
+	V Heating R2 [mV] (float)		->	sensor2_heat_mV (FLOAT)																Round with two decimals
+	V Heating R3 [mV] (float)		->	sensor3_heat_mV (FLOAT)																Round with two decimals
+	V Heating R4 [mV] (float)		->	sensor4_heat_mV (FLOAT)																Round with two decimals
+	I Heating R1 [mA] (float)		->	sensor1_heat_mA (FLOAT)																Round with two decimals
+	I Heating R2 [mA] (float)		->	sensor2_heat_mA (FLOAT)																Round with two decimals
+	I Heating R3 [mA] (float)		->	sensor3_heat_mA (FLOAT)																Round with two decimals
+	I Heating R4 [mA] (float)		->	sensor4_heat_mA (FLOAT)																Round with two decimals
+	T Heating R1 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
+	T Heating R2 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
+	T Heating R3 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
+	T Heating R4 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
+	C1 Flow [ml/min] (float) 		->	c1_flow_ml_min (INT)																Transform to int, round down
+	C2 Flow [ml/min] (float) 		->	c2_flow_ml_min (INT)																Transform to int, round down
+	C3 Flow [ml/min] (float) 		->	c3_flow_ml_min (INT)																Transform to int, round down
+	C4 Flow [ml/min] (float) 		->	c4_flow_ml_min (INT)																Transform to int, round down
+	C5 Flow [ml/min] (float)		->	c5_flow_ml_min (INT)																Transform to int, round down
+	Nada (object)				  	->																						Remove this column
+	Voltaje Polarización [V] (float)->	polarization_voltage_V (FLOAT)														
+	HR (float)						->	humidity_percentage  (FLOAT)
+	Untitled (object)			  	->	comments (VARCHAR)
