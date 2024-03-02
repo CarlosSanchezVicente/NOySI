@@ -23,6 +23,7 @@ MATERIALS DATABASE
 	created_time (object)         ->    record_created_time (TIMESTAMP)														Transform to datetime
 	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
 	Preparación (object)          ->    preparation_date (TIMESTAMP)       		None: commercial materials					Transform to datetime
+								  ->    load_ts									Variable to save the ingestion date
 
 	-- Percentage and ratio
 	Otros compuestos (object)     ->    others_compounds (VARCHAR)				None: no other compounds
@@ -59,6 +60,7 @@ SOLUTIONS DATABASE
 	created_time (object)         ->    record_created_time (TIMESTAMP)         											Transform to datetime
 	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
 	Preparación (object)          ->    preparation_date (TIMESTAMP)       													Transform to datetime
+								  ->    load_ts									Variable to save the ingestion date
 
 	-- Percentage and ratio
 	Concentración (object)        ->    ratio_materials (VARCHAR)
@@ -91,6 +93,7 @@ SENSORS DATABASE
 	-- Date
 	created_time (object)         ->    record_created_time (TIMESTAMP)         											Transform to datetime
 	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
+								  ->    load_ts									Variable to save the ingestion date
 
 	-- Deposition parameters
 	Método dep. (object)   		  ->   	deposition_method (VARCHAR)				None: commercial sensors
@@ -120,6 +123,7 @@ LEDS DATABASE
 	-- Date
 	created_time (object)         ->	record_created_time (TIMESTAMP)         											Transform to datetime
 	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime												Transform to datetime
+								  ->    load_ts									Variable to save the ingestion date
 
 	-- Led characteristics
 	V/A utilizado (object)		  ->	voltage_V_used (FLOAT)																Split 'V/A utilizado' column in two parts and take the voltage - Transform to float
@@ -146,6 +150,7 @@ GASES DATABASE
 	-- Researcher and manufacturer
 	created_by (object)           ->    record_created_by (VARCHAR)
 	last_edited_by (object)       ->    record_last_edited_by (VARCHAR)
+								  ->    load_ts									Variable to save the ingestion date
 
 	-- Date
 	created_time (object)         ->	record_created_time (TIMESTAMP)         											Transform to datetime
@@ -161,7 +166,8 @@ MEASUREMENTS DATABASE
 
 	-- Description product
 								  ->    ID                                 													Create this variable (use the dataframe index)	                  
-    id (object)                   ->    id_measurement (VARCHAR)
+	ID_conn						  ->    conn_measurement (VARCHAR)				Variable to connect with op. and ele.	
+	id (object)                   ->    id_measurement (VARCHAR)
 	Título (object)               ->    name_measurement (VARCHAR)
 	Gas (object)            	  ->    label (VARCHAR)							None: due to measurement without gas
 	parent (object)               ->    parent (VARCHAR)
@@ -175,8 +181,10 @@ MEASUREMENTS DATABASE
 	-- Date
 	created_time (object)         ->	record_created_time (TIMESTAMP)         											Transform to datetime
 	last_edited_time (object)     ->    record_last_edited_time (TIMESTAMP)     											Transform to datetime
+								  ->    load_ts									Variable to save the ingestion date
 
 	-- Measurement characteristics
+	Proyecto (object)			  ->    project (VARCHAR)
 	Concentraciones	(object)	  ->	concetrations_ppb (VARCHAR)															
 	Humedad	(object)			  ->	humidity_percentage (FLOAT)															Remove the '%' symbol and transform to float
 	Equipo medida (object)		  ->	measurement_equipment (VARCHAR)
@@ -190,6 +198,7 @@ MEASUREMENTS DATABASE
 
 
 
+
 --------------------------------------------------------------------------------------------------------------------------------------------------
 --------------------------    ELECTRICAL DATA    -------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,6 +208,9 @@ METHANE LINE DATABASE
 
 	-- Description product
 	Measurement [#] (float)			->	ID (INT)																			Transform to int
+									->  title_file
+									->  date_measurement
+									->  load_ts									Variable to save the ingestion date
 	Time [s] (float)				->	time_s (FLOAT)
 	R1 [ohm] (float)				-> 	sensor1_ohm (FLOAT)
 	R2 [ohm] (float)				->	sensor1_ohm (FLOAT)
@@ -230,3 +242,4 @@ METHANE LINE DATABASE
 	Voltaje Polarización [V] (float)->	polarization_voltage_V (FLOAT)														
 	HR (float)						->	humidity_percentage  (FLOAT)
 	Untitled (object)			  	->	comments (VARCHAR)
+									

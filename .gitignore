@@ -154,6 +154,10 @@ cython_debug/
 
 # Configuration
 _wip_/
+data/
+data/Bronze/
+data/Silver/
+data/Gold/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
