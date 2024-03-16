@@ -202,24 +202,22 @@ MEASUREMENTS DATABASE
 --------------------------------------------------------------------------------------------------------------------------------------------------
 --------------------------    ELECTRICAL DATA    -------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------
-METHANE LINE DATABASE
+METHANE LINE DATABASE (data_methane_line)
     BRONZE (dataframe)             	    SILVER (database)                  		COMMENTS									TRANSFORM ACTION
 
 	-- Description product
 	Measurement [#] (float)			->	ID (INT)																			Transform to int
-									->  title_file
-									->  date_measurement
-									->  load_ts									Variable to save the ingestion date
+									->  title_file (VARCHAR)
+									->  load_ts	(VARCHAR)						Variable to save the ingestion date
 	Time [s] (float)				->	time_s (FLOAT)
 	R1 [ohm] (float)				-> 	sensor1_ohm (FLOAT)
-	R2 [ohm] (float)				->	sensor1_ohm (FLOAT)
-	R3 [ohm] (float)				->	sensor1_ohm (FLOAT)
-	R4 [ohm] (float)				->	sensor1_ohm (FLOAT)
+	R2 [ohm] (float)				->	sensor2_ohm (FLOAT)
+	R3 [ohm] (float)				->	sensor3_ohm (FLOAT)
+	R4 [ohm] (float)				->	sensor4_ohm (FLOAT)
 	[Botella 1-Nada] [ppbv] (float)	->	bottle1_ppb (FLOAT)
 	[Botella 2-CO2] [ppbv] (float)	->	bottle2_ppb (FLOAT)
 	[Botella 3-Nada] [ppbv] (float)	->	bottle3_ppb (FLOAT)
-	Time Stamp (object)				->	date (TIMESTAMP)																	Transform to timestamp
+	Time Stamp (object)				->	date_time (TIMESTAMP)																Transform to timestamp
 	Temperature [ºC] (float)		->	temperature_C (FLOAT)
 	V Heating R1 [mV] (float)		->	sensor1_heat_mV (FLOAT)																Round with two decimals
 	V Heating R2 [mV] (float)		->	sensor2_heat_mV (FLOAT)																Round with two decimals
@@ -230,16 +228,46 @@ METHANE LINE DATABASE
 	I Heating R3 [mA] (float)		->	sensor3_heat_mA (FLOAT)																Round with two decimals
 	I Heating R4 [mA] (float)		->	sensor4_heat_mA (FLOAT)																Round with two decimals
 	T Heating R1 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
-	T Heating R2 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
-	T Heating R3 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
-	T Heating R4 [ºC] (float)		->	sensor1_heat_C (FLOAT)																Round with two decimals
-	C1 Flow [ml/min] (float) 		->	c1_flow_ml_min (INT)																Transform to int, round down
-	C2 Flow [ml/min] (float) 		->	c2_flow_ml_min (INT)																Transform to int, round down
-	C3 Flow [ml/min] (float) 		->	c3_flow_ml_min (INT)																Transform to int, round down
-	C4 Flow [ml/min] (float) 		->	c4_flow_ml_min (INT)																Transform to int, round down
-	C5 Flow [ml/min] (float)		->	c5_flow_ml_min (INT)																Transform to int, round down
-	Nada (object)				  	->																						Remove this column
+	T Heating R2 [ºC] (float)		->	sensor2_heat_C (FLOAT)																Round with two decimals
+	T Heating R3 [ºC] (float)		->	sensor3_heat_C (FLOAT)																Round with two decimals
+	T Heating R4 [ºC] (float)		->	sensor4_heat_C (FLOAT)																Round with two decimals
+	C1 Flow [ml/min] (float) 		->	c1_flow_ml_min (FLOAT)																Transform to int, round down
+	C2 Flow [ml/min] (float) 		->	c2_flow_ml_min (FLOAT)																Transform to int, round down
+	C3 Flow [ml/min] (float) 		->	c3_flow_ml_min (FLOAT)																Transform to int, round down
+	C4 Flow [ml/min] (float) 		->	c4_flow_ml_min (FLOAT)																Transform to int, round down
+	C5 Flow [ml/min] (float)		->	c5_flow_ml_min (FLOAT)																Transform to int, round down
+	Nada (object)				  	->	c6_flow_ml_min (FLOAT)																			Remove this column
 	Voltaje Polarización [V] (float)->	polarization_voltage_V (FLOAT)														
 	HR (float)						->	humidity_percentage  (FLOAT)
 	Untitled (object)			  	->	comments (VARCHAR)
-									
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------    OPTICAL DATA    ----------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
+OPTICAL PARAMETERS DATABASE
+    BRONZE (dataframe)             	    		SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+											 ->	experiment_name (VARCHAR)
+											 ->	start_timestamp (VARCHAR)
+											 ->	load_ts (VARCHAR)
+	Spectrometer (object)					 ->	spectrometer (VARCHAR)
+	Trigger mode (object)					 ->	trigger_mode (FLOAT)																Transform to float
+	Integration Time (sec). (object)		 ->	integration_time_s (FLOAT)															Transform to float
+	Scan to average (object)				 ->	scan_to_avg (FLOAT)																	Transform to float
+	Nonlinearity correction enabled (object) ->	nonlinearity_corr (INT)																Transform to int
+	Boxcar width (object)					 -> boxcar_width (FLOAT)																Transform to float
+	XAxis mode (object) 					 -> x_axis_node (VARCHAR)
+	Number of Pixels in Spectrum (object)    -> pixels_number (INT)																	Transform to int
+
+
+----------------------------------------------------------
+SPECTRA DATABASE
+    BRONZE (dataframe)             	    		SILVER (database)                  		COMMENTS									TRANSFORM ACTION
+											 ->	experiment_name (VARCHAR)
+											 ->	current_timestamp (VARCHAR)
+											 -> axis (VARCHAR)
+											 -> spectra (VARCHAR)							This is a list with numbers.
+			
