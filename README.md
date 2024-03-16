@@ -26,7 +26,12 @@ This project includes a database in the silver zone and another in the gold zone
 
 On the other hand, the database (gold) is made up of two tables as shown in the following image:
 
-<img src="./img/data_model_gold.PNG" alt="Data model" width="700" align="center">
+<img src="./img/data_model_gold.PNG" alt="Data model" width="500" align="center">
+
+### 📊 Visualization
+This is the visualization on streamlit
+
+<img src="./img/streamlit.PNG" alt="Data model" width="500" align="center">
 
 ### 💻 Technology stack
 - Python==3.9.18
