@@ -299,7 +299,7 @@ def electrical_data_transform(sensor_name):
 
     # WRITE DATA TO GOLD DATAFRAME
     # Connect with database
-    conn = duckdb.connect("C:/Users/carlo/NOySI/data/Gold/LabGold.db")
+    conn = duckdb.connect("./data/Gold/LabGold.db")
     # Query structure
     query_write = """
         INSERT INTO {table_name} ({columns})
