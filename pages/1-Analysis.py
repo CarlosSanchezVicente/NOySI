@@ -270,8 +270,9 @@ if (line_req != '') and (gas_req != '') and (exp_name_req != ''):
             #if type_process == 'raw_data':
             a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
                 alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor1_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e"))
-            )
+                alt.Y('sensor1_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+            ).transform_calculate(response_label="'Sensor response'")
             #elif type_process == 'drift_data':
             #    a = alt.Chart(data_drift_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
             #        alt.X('time_s', title='Time (s)'),
@@ -280,23 +281,29 @@ if (line_req != '') and (gas_req != '') and (exp_name_req != ''):
         elif sensor_select == 'Sensor 2':
             a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
                 alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor2_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e"))
-            )
+                alt.Y('sensor2_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+            ).transform_calculate(response_label="'Sensor response'")
         elif sensor_select == 'Sensor 3':
             a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
                 alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor3_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e"))
-            )
+                alt.Y('sensor3_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+            ).transform_calculate(response_label="'Sensor response'")
         elif sensor_select == 'Sensor 4':
             a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
                 alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor4_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e"))
-            )
+                alt.Y('sensor4_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+            ).transform_calculate(response_label="'Sensor response'")
 
         b = alt.Chart(data_electrical_df).mark_line(stroke='#57A44C', interpolate='monotone').encode(
             alt.X('time_s', title='Time (s)'),
-            alt.Y(nonzero_column, title='Gas concentration (ppb)', axis=alt.Axis(tickCount=10, format=".1e"))
-        )
+            alt.Y(nonzero_column, title='Gas concentration (ppb)', axis=alt.Axis(tickCount=10, format=".1e")),
+            color=alt.Color('concentration_label:N').scale(range=['#57A44C']).title('Legend')
+        ).transform_calculate(concentration_label="'Gas concentration'")
+
+        scale_kwargs = dict(domain=["response_label", "concentration_label"], range=["#5276A7", "#57A44C"])
 
         c = alt.layer(a, b).resolve_scale(
             y='independent'

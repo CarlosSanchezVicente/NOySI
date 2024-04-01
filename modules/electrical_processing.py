@@ -65,16 +65,16 @@ def sensor_processing(df, bottle_name):
     prev_value = 0
 
     for index, row in df.iterrows():
-        # Primer valor
+        # First value
         if index == df.index[0]:
             pos.append([index, None])
         
-        # Inicia adsorción
+        # Adsortion init
         elif prev_value < row[bottle_name]:
             pos[-1][1] = index-1
             pos.append([index, None])
         
-        # Fin adsorción
+        # Adsortion end
         elif prev_value > row[bottle_name]:
             pos[-1][1] = index-1
             pos.append([index, None])
@@ -99,7 +99,7 @@ def add_date_to_pos(pos_df):
         pos_temp = row['final_pos']
 
         # Store the datetime for last element of each semicycle
-        timestamp_value = df.loc[pos_temp]['date_timestamp']
+        timestamp_value = pos_df.loc[pos_temp]['date_timestamp']
 
         # Store the value in the list
         datetime_list.append(timestamp_value)
@@ -135,25 +135,88 @@ def desplaced_column(df, pos_df):
 
 # Función para escribir en la base de datos
 def write_df_to_db(con, df, table_name, query_write):
-    # Formatear las fechas en el DataFrame
-    #df = format_dates_in_df(df)
-    
-    # Obtener los nombres de las columnas del DataFrame
+    # Obtain the dataframe columns names
     columns = ','.join(df.columns)
     
-    # Iterar sobre cada fila del DataFrame e insertarla en la base de datos
+    # Iterate over each row of the DataFrame and insert it into the database.
     for index, row in df.iterrows():
-        # Extraer los valores de una fila
+        # EExtract values from a row
         values = tuple(row)
-        # Construir la consulta de escritura
+        # Build the writing query
         query = query_write.format(table_name=table_name, columns=columns, values=values)
         print(query)
         con.execute(query)
 
 
+# Function to calculate the response of the data
+def response_calculation(data_df, data_complete_df, pos_complete_df):
+    exp_name_list = data_df['file_title'].unique()
+    sensor_names_without_drift = ['s1_without_drift', 's2_without_drift', 's3_without_drift', 's4_without_drift']
+
+    # Create empty dataframe
+    response_complete_df = pd.DataFrame()
+
+    # Iterate over each experiment
+    for exp_name in exp_name_list:
+        data_filtered_df = data_complete_df.loc[(data_complete_df['file_title'] == exp_name)]
+        pos_filtered_df = pos_complete_df.loc[(pos_complete_df['file_title'] == exp_name)]
+        
+        # Remove the las record if the length of the dataframe is odd
+        if len(pos_filtered_df)%2 != 0:
+            pos_filtered_df = pos_filtered_df[:-1]
+        else:
+            pos_filtered_df = pos_filtered_df
+        
+        # Iterate over each cycle
+        for i in range(0, len(pos_filtered_df), 2):
+            # Obtain the positions
+            pos_final_air = pos_filtered_df.iloc[i]['final_pos']
+            pos_final_gas = pos_filtered_df.iloc[i + 1]['final_pos']
+            
+            # Create empty dictionary to store temporaly the responses
+            response_dict = {}
+            
+            # Iterate over each sensor
+            for sensor in sensor_names_without_drift:
+                #print('este es el valor de i: ', i)
+                # Calculate if the cycle is oxidant or reductor: 
+                # pos_final_air and pos_final_gas are values of the ID column, not of the Index. Since the experiments in which 
+                # no gas is measured without any gas, they are not added to gold.
+                data_air = data_filtered_df[data_filtered_df['ID'] == pos_final_air][sensor].values[0]
+                data_gas = data_filtered_df[data_filtered_df['ID'] == pos_final_gas][sensor].values[0]
+
+                # Calculate the response
+                if data_air > data_gas:
+                    response = ((data_air - data_gas)/data_gas)*100
+                elif data_air < data_gas:
+                    response = ((data_gas - data_air)/data_air)*100
+                else:
+                    response = 0
+
+                # Store the response of each sensor in the dictionary
+                response_dict[sensor] = response
+                response_dict['concentration_ppb'] = pos_filtered_df.iloc[i + 1]['bottle_cycle_ppb']
+            
+            # Store the experiment name in dictionary (this is the same for the four sensors)
+            response_dict['file_title'] = exp_name
+            
+            # Transform dictionary to DataFrame. Store these data for each cycle of each experiment
+            temp = pd.DataFrame(response_dict, index=[0])
+            if response_complete_df.empty:
+                response_complete_df = temp.copy()
+            else:
+                response_complete_df = pd.concat([response_complete_df, temp], ignore_index=True)
+
+    # Other transformations in pos_complete_df
+    response_complete_df['ID'] = response_complete_df.reset_index().index
+    response_reorder_columns = ['ID', 'file_title', 'concentration_ppb', 's1_without_drift', 's2_without_drift', 
+                                's3_without_drift', 's4_without_drift']
+    response_complete_df = response_complete_df.reindex(columns=response_reorder_columns)
+    return response_complete_df
+
 
 # MAIN FUNCTIONS
-def electrical_data_transform(df, sensor_name):
+def electrical_data_transform(sensor_name):
     # Extract data from silver database
     data_df = extract_data()
     exp_name_list = data_df['file_title'].unique()
@@ -188,9 +251,6 @@ def electrical_data_transform(df, sensor_name):
                 # Change sensor name
                 dict_name = {'sensor1_ohm': 's1', 'sensor2_ohm': 's2', 'sensor3_ohm': 's3', 'sensor4_ohm': 's4'}
                 short_name = dict_name[sensor_name]
-
-                # Obtain the medium value of the signal
-                medium_value = df[sensor_name].mean()
 
                 # Create new column NaN
                 drift_curve = f"{short_name}_drift_curve"
@@ -228,21 +288,32 @@ def electrical_data_transform(df, sensor_name):
     pos_complete_df['ID'] = pos_complete_df.reset_index().index
     reorder_columns = ['ID', 'file_title', 'init_pos', 'final_pos', 'bottle_cycle_ppb', 'final_date_timestamp']
     pos_complete_df = pos_complete_df.reindex(columns=reorder_columns)
+
+    # Other transformations in data_complete_df
     data_complete_df['date_timestamp'] = data_complete_df['date_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
     data_complete_df['load_ts'] = data_complete_df['load_ts'].dt.strftime('%Y-%m-%d %H:%M:%S')
     data_complete_df = data_complete_df.fillna(value=0)
 
+    # Obtain the response of each cycle
+    response_complete_df = response_calculation(data_df, data_complete_df, pos_complete_df)
+
     # WRITE DATA TO GOLD DATAFRAME
     # Connect with database
     conn = duckdb.connect("C:/Users/carlo/NOySI/data/Gold/LabGold.db")
-
-    # Build the query
-    table_name = 'data_methane_processed'   # Construct table name 
+    # Query structure
     query_write = """
         INSERT INTO {table_name} ({columns})
         VALUES {values};
     """
-            
-    # Write the data
+
+    # Build the query and write the data to data_complete_df
+    table_name = 'data_methane_processed'   # Construct table name        
     write_df_to_db(conn, data_complete_df, table_name, query_write)
-    
+
+    # Build the query and write the data to data_complete_df
+    table_name = 'data_methane_pos'   # Construct table name        
+    write_df_to_db(conn, pos_complete_df, table_name, query_write)
+
+    # Build the query and write the data to response_complete_df
+    table_name = 'data_methane_response'   # Construct table name        
+    write_df_to_db(conn, response_complete_df, table_name, query_write)
