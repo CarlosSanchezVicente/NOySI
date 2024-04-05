@@ -4,5 +4,6 @@ altair
 python-dotenv
 scipy
 nptdms
-notion_client
+notion
+notion-client
 json
