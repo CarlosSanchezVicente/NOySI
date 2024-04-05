@@ -1,9 +1,5 @@
 # IMPORTS LIBRARIES
-import pandas as pd
-import numpy as np
 import streamlit as st
-import requests
-import duckdb
 from dotenv import dotenv_values 
 
 # IMPORT FUNCTIONS FROM MODULES

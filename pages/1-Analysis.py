@@ -1,13 +1,13 @@
 # IMPORTS LIBRARIES
 import pandas as pd
-import numpy as np
 import duckdb
 import streamlit as st 
 import altair as alt
 from streamlit_datetime_range_picker import datetime_range_picker
 import datetime
 
-
+# Necessary to use duckdb module in streamlit
+#atp_duck = duckdb.connect('atp.duck.db', read_only=True)
 
 # DEFINE
 #line_req = ''
@@ -54,7 +54,7 @@ FROM solutions_hist AS sol
 JOIN materials_hist AS mat ON sol.id_solute = mat.id_material
 WHERE id_solution = ?
 """
-query_drift = """
+query_drift= """
 SELECT 
     file_title,
     time_s,
@@ -66,8 +66,19 @@ SELECT
     s3_without_drift,
     s4_without_drift
 FROM data_methane_processed
+WHERE file_title = ?;
 """
-
+query_response = """
+SELECT 
+    file_title,
+    concentration_ppb,
+    s1_without_drift,
+    s2_without_drift,
+    s3_without_drift,
+    s4_without_drift
+FROM data_methane_response
+WHERE file_title = ?;
+"""
 
 # CONFIGURATION PAGE
 #st.title('Data analysis and plot the experiment')
@@ -235,22 +246,22 @@ last_configuration = update_last_configuration(new_configuration)
 if (line_req != '') and (gas_req != '') and (exp_name_req != ''):
     # Button: plot the graph
     if st.sidebar.button('Plot', type='primary') or last_configuration == new_configuration:
-        # Datetime_range: select the time range
+        # TITLE: Datetime_range: select the time range
         st.markdown("## Data analysis and plotting")
 
         # Extract data from database (silver)
         data_electrical_df = con.execute(query_electrical, ([exp_name_req,])).df()
         # Extract data from database (gold)
-        #data_drift_df = conn.execute(query_drift, ([exp_name_req,])).df()
-
-        # Plot the table with sensor caracteristics
+        data_drift_df = conn.execute(query_drift, ([exp_name_req,])).df()
+        
+        # TABLE: Plot the table with sensor caracteristics
         solutions_used_value = data_experiment_df.loc[data_experiment_df['conn_measurement'] == exp_name_req, 'solutions_used'].values[0]
         sensor_materials_df = extract_sensor_materials(solutions_used_value)
         st.markdown('#### Sensor matrix composition')
         st.table(sensor_materials_df)
         st.markdown("""---""")
 
-        # Plot electrical data
+        # PLOT ELECTRICAL DATA
         st.markdown("### Electrical data")
 
         # Checkbox to select plot configuration
@@ -267,55 +278,111 @@ if (line_req != '') and (gas_req != '') and (exp_name_req != ''):
         # Plot graph with double y-axis
         #st.markdown('#### Sensor graph')
         if sensor_select == 'Sensor 1':
-            #if type_process == 'raw_data':
-            a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
-                alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor1_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
-                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
-            ).transform_calculate(response_label="'Sensor response'")
-            #elif type_process == 'drift_data':
-            #    a = alt.Chart(data_drift_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
-            #        alt.X('time_s', title='Time (s)'),
-            #        alt.Y('s1_without_drift', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e"))
-            #    )
+            if type_process == 'raw_data' or type_process == '':
+                a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('sensor1_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
+            elif type_process == 'drift_data':
+                a = alt.Chart(data_drift_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('s1_without_drift', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
+
         elif sensor_select == 'Sensor 2':
-            a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
-                alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor2_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
-                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
-            ).transform_calculate(response_label="'Sensor response'")
+            if type_process == 'raw_data' or type_process == '':
+                a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('sensor2_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
+            elif type_process == 'drift_data':
+                a = alt.Chart(data_drift_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('s2_without_drift', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
+
         elif sensor_select == 'Sensor 3':
-            a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
-                alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor3_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
-                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
-            ).transform_calculate(response_label="'Sensor response'")
+            if type_process == 'raw_data' or type_process == '':
+                a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('sensor3_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
+            elif type_process == 'drift_data':
+                a = alt.Chart(data_drift_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('s3_without_drift', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
+
         elif sensor_select == 'Sensor 4':
-            a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
-                alt.X('time_s', title='Time (s)'),
-                alt.Y('sensor4_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
-                color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
-            ).transform_calculate(response_label="'Sensor response'")
+            if type_process == 'raw_data' or type_process == '':
+                a = alt.Chart(data_electrical_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('sensor4_ohm', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
+            elif type_process == 'drift_data':
+                a = alt.Chart(data_drift_df).mark_line(stroke='#5276A7', interpolate='monotone').encode(
+                    alt.X('time_s', title='Time (s)'),
+                    alt.Y('s4_without_drift', title='Sensor resistance (Ohm)', axis=alt.Axis(tickCount=10, format=".1e")),
+                    color=alt.Color('response_label:N').scale(range=['#5276A7']).title('Legend')
+                ).transform_calculate(response_label="'Sensor response'")
 
         b = alt.Chart(data_electrical_df).mark_line(stroke='#57A44C', interpolate='monotone').encode(
             alt.X('time_s', title='Time (s)'),
-            alt.Y(nonzero_column, title='Gas concentration (ppb)', axis=alt.Axis(tickCount=10, format=".1e")),
-            color=alt.Color('concentration_label:N').scale(range=['#57A44C']).title('Legend')
+            alt.Y(nonzero_column, title='Gas concentration (ppb)', axis=alt.Axis(tickCount=10)),   #, format=".1e"
+            color=alt.Color('concentration_label:N').scale(range=['#57A44C']).title(None)
         ).transform_calculate(concentration_label="'Gas concentration'")
 
-        scale_kwargs = dict(domain=["response_label", "concentration_label"], range=["#5276A7", "#57A44C"])
+        scale_kwargs = dict(domain=['response_label:N', 'concentration_label:N'], range=["#5276A7", "#57A44C"])
 
         c = alt.layer(a, b).resolve_scale(
-            y='independent'
+            y='independent',
+            color='independent'
         ).properties(
-            width=700  # Ajustar el ancho del gráfico según sea necesario
+            width=750,  # Ajustar el ancho del gráfico según sea necesario
+            height=350
         )
 
-        st.altair_chart(c)
+        st.altair_chart(c, theme="streamlit")
 
-        # Plot optical data
+        # PLOT RESPONSE DATA
+        # Extract data from database (gold)
+        st.markdown('##')   # Add blanck space between two streamlit components
+        data_response_df = conn.execute(query_response, ([exp_name_req,])).df()
+        
+        # Change the columns names
+        new_names = {'concentration_ppb': 'Concentration (ppb)', 's1_without_drift': 'S1 response', 's2_without_drift': 'S2 response', 's3_without_drift': 'S3 response', 's4_without_drift': 'S4 response'}
+        data_response_df_trans = data_response_df.rename(columns=new_names)
+        # Transform the data to plot
+        melted_df = pd.melt(data_response_df_trans, 
+                            id_vars=['Concentration (ppb)'],
+                            value_vars=['S1 response', 'S2 response', 'S3 response', 'S4 response'], 
+                            var_name='Legend', 
+                            value_name='Response (%)')
+        
+        # Plot the graph
+        d = alt.Chart(melted_df).mark_line(
+            point=True
+        ).encode(
+            x='Concentration (ppb)',
+            y='Response (%)',
+            color='Legend'
+        ).properties(
+            width=750,  # Ajustar el ancho del gráfico según sea necesario
+            height=350
+        )
+        st.altair_chart(d)
+
+        # PLOT OPTICAL DATA
         #st.table(data_electrical_df)
         st.markdown("""---""")
+        
 
         # Plot electrical data
         st.markdown("### Optical data")
