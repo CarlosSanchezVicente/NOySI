@@ -1,9 +1,9 @@
 # Imports
 import pandas as pd
 import numpy as np
-from io import StringIO
-import matplotlib.pyplot as plt
-import requests
+#from io import StringIO
+#import matplotlib.pyplot as plt
+#import requests
 from dotenv import dotenv_values
 import datetime
 import os   # Import data from directory

@@ -2,3 +2,7 @@ streamlit
 duckdb
 altair
 python-dotenv
+scipy
+nptdms
+notion_client
+json

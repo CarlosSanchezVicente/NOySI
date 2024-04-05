@@ -5,16 +5,16 @@ import pandas as pd
 import datetime
 # File import
 from nptdms import TdmsFile   # Import tdms files
-import requests   # Make http GET and POST requests
+#import requests   # Make http GET and POST requests
 import os   # Import data from directory
 # Others
-from io import StringIO   # Handle different types of I/O
+#from io import StringIO   # Handle different types of I/O
 from dotenv import dotenv_values   # Load environment variables from a .env file in an application
-import re
+#import re
 import duckdb
-import warnings
+#import warnings
 # Processing
-import scipy #import signal
+#import scipy #import signal
 
 # IMPORT FUNCTIONS FROM MODULES
 from modules import read_directory as dir
