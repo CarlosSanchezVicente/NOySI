@@ -6,4 +6,3 @@ scipy
 nptdms
 notion
 notion-client
-streamlit-datetime-range-picker
