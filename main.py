@@ -3,10 +3,10 @@ import streamlit as st
 from dotenv import dotenv_values 
 
 # IMPORT FUNCTIONS FROM MODULES
-from modules import notion_read_transform as notion
-from modules import electrical_read_transform as elecr
-from modules import electrical_processing as elecp
-from modules import optical_read_transform as op
+#from modules import notion_read_transform as notion
+#from modules import electrical_read_transform as elecr
+#from modules import electrical_processing as elecp
+#from modules import optical_read_transform as op
 
 
 # DEFINITION
