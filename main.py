@@ -11,11 +11,11 @@ from dotenv import dotenv_values
 
 # DEFINITION
 # General
-config = dotenv_values('.env')
+#config = dotenv_values('.env')
 # Notion
 
 # Electrical measurement
-path_methane_line = config['path_methane_line']
+#path_methane_line = config['path_methane_line']
 ID_dict_elec = {'MethaneLine':{'db_name': 'data_methane_line',
 
                           'DB_new_order':['ID','file_title', 'load_ts', 'time_s', 'sensor1_ohm', 'sensor2_ohm', 
