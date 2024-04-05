@@ -3,7 +3,8 @@ import pandas as pd
 import duckdb
 import streamlit as st 
 import altair as alt
-from streamlit_datetime_range_picker import datetime_range_picker
+#from streamlit_datetime_range_picker import datetime_range_picker
+#from streamlit_date_picker import date_range_picker, PickerType, Unit, date_picker
 import datetime
 
 # Necessary to use duckdb module in streamlit
