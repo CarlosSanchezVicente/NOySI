@@ -1,6 +1,7 @@
 # IMPORTS
 import duckdb
 import pandas as pd
+import streamlit as st
 
 
 # QUERY
@@ -47,6 +48,5 @@ def write_df_to_db(con, df, table_name, query_write):
         values = tuple(row)
         # Build the writing query
         query = query_write.format(table_name=table_name, columns=columns, values=values)
-        print(query)
         con.execute(query)
 

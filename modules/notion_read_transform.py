@@ -8,10 +8,12 @@ import notion_client
 import duckdb
 import statistics
 from datetime import datetime
+import streamlit as st 
 
 # IMPORT FUNCTIONS FROM MODULES
 #from modules import notion_trans_s as transform_notion
 from modules import duckdb as db
+from modules import read_directory as dir
 
 # SOURCES
 # API Notion: https://www.notion.so/es-la/help/create-integrations-with-the-notion-api
@@ -312,9 +314,10 @@ def get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date):
         )
     
     # Store the json in the bronze file in google drive
-    data = response.json()
-    with open (path, 'w', encoding='utf8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    data = response
+    #data = response.json()
+    #with open (path, 'w', encoding='utf8') as f:
+    #    json.dump(data, f, ensure_ascii=False, indent=4)
     
     return data
 
@@ -568,7 +571,7 @@ def replace_nan_nat_none(df):
 
 
 # MAIN FUNCTIONS
-def obtain_data_notion(process_type, date='2024-01-01', pages_number=100):
+def obtain_data_notion(process_type, pages_number=100):   #date='2024-01-01',
     """Summary: function to obtain the pages of the databases or from last update('process_type' indicates the behavior). 
 
     Args:
@@ -584,6 +587,7 @@ def obtain_data_notion(process_type, date='2024-01-01', pages_number=100):
     """
     # Definition
     ID_list = ['MATERIALES_DB', 'DISOLUCIONES_DB', 'SENSORES_DB', 'LED_DB', 'GASES_DB', 'MEDIDAS_DB']
+    st.markdown('#### New Notion records:')
 
     # Obtain and store data from each notion table
     for db_name in ID_list:
@@ -610,7 +614,8 @@ def obtain_data_notion(process_type, date='2024-01-01', pages_number=100):
                 pages = get_pages_more_100(headers, DATABASE_ID, path, pages_number=None)
         # If the user want to obtain the pages from specific date
         elif process_type == 'time':
-            get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date)
+            date = dir.read_last_charge_date()
+            pages = get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date)
         else:
             print('Error: You have entered an incorrect value for the data entry type. \nYou have to introduce: "number" or "total"')
             #return 
@@ -618,70 +623,108 @@ def obtain_data_notion(process_type, date='2024-01-01', pages_number=100):
         # Obtain a dataframe from json
         df = extract_data_from_json(pages)
         
-        
-        # COLUMN TRANSFORMATIONS COMMON TO ALL TABLES 
-        # Remove space blanc before or after each column name
-        df.rename(columns=lambda x: x.strip(), inplace=True)
+        # It may be the case that some databases do not have any new records. In this case the code execution is not continued in order to avoid errors.
+        if not df.empty:
+            # COLUMN TRANSFORMATIONS COMMON TO ALL DATAFRAMES 
+            # Remove space blanc before or after each column name
+            df.rename(columns=lambda x: x.strip(), inplace=True)
 
-        # Create column ID
-        df.reset_index(inplace=True)
-        
-        # Create load_ts column with ingestion date
-        df['load_ts'] = str(datetime.now())
-        
-        # Create variable name of new order and map 
-        new_order = ID_dict[db_name]['DB_new_order']
-        maps = ID_dict[db_name]['DB_map']
-        
-        # Change the column names such as the database
-        print(new_order)
-        df = df[new_order]
-        df.rename(columns=maps, inplace=True)
-
-        
-        # TRANSFORM THE TABLE IN EACH CASE FOR SPECIFIC COLUMNS
-        if db_name == 'MATERIALES_DB':
-            # Transform range to int
-            df['main_comp_percentage'] = df['main_comp_percentage'].apply(lambda row: transform_rages(row))
-            # Remove the units and symbols
-            df['thickness_nm'] = df['thickness_nm'].apply(lambda row: remove_symbol_nm(row))
-            # Remove the units and symbols
-            df['size_material_nm'] = df['size_material_nm'].apply(lambda row: remove_symbol_nm(row))
-
-        elif db_name == 'DISOLUCIONES_DB':
-            pass
-
-        elif db_name == 'SENSORES_DB':
-            pass 
-
-        elif db_name == 'LED_DB':
-            pass
-
-        elif db_name == 'GASES_DB':
-            # Remove the units and symbols
-            df['max_concentration_ppb'] = df['max_concentration_ppb'].apply(lambda row: remove_symbol_bottle(row))
-
-        elif db_name == 'MEDIDAS_DB':
-            # Remove the units and symbols
-            df['humidity_percentage'] = df['humidity_percentage'].apply(lambda row: remove_symbol_humidity(row))
-            # Add date to file name
-            df['label'] = df['label'].apply(lambda row: sort_gases_names(row))
+            # Create column ID
+            df.reset_index(inplace=True)
+            
+            # Create load_ts column with ingestion date
+            df['load_ts'] = str(datetime.now())
+            
+            # Create variable name of new order and map 
+            new_order = ID_dict[db_name]['DB_new_order']
+            maps = ID_dict[db_name]['DB_map']
+            
+            # Change the column names such as the database
+            df = df[new_order]
+            df.rename(columns=maps, inplace=True)
 
             
-        # Transform NaT, None, NaN to Unkown
-        df = replace_nan_nat_none(df)
-        
-        # STORE THE DATA IN SILVER DB
-        # Connect with database
-        con = duckdb.connect(path_db)
-        
-        # Build the query
-        table_name = ID_dict[db_name]['db_name'] + '_hist'   # Construct table name 
-        query_write = """
-            INSERT INTO {table_name} ({columns})
-            VALUES {values};
-        """
-        
-        # Write the data
-        db.write_df_to_db(con, df, table_name, query_write)
+            # TRANSFORMATION OF COLUMNS SPECIFIC TO EACH DATAFRAME
+            if db_name == 'MATERIALES_DB':
+                # Transform range to int
+                df['main_comp_percentage'] = df['main_comp_percentage'].apply(lambda row: transform_rages(row))
+                # Remove the units and symbols
+                df['thickness_nm'] = df['thickness_nm'].apply(lambda row: remove_symbol_nm(row))
+                # Remove the units and symbols
+                df['size_material_nm'] = df['size_material_nm'].apply(lambda row: remove_symbol_nm(row))
+                # Data charged to database
+                st.markdown('##### Materiales stored to the database:')
+                name_values = df['name_material'].tolist()
+                st.write(pd.DataFrame({'Nombre de los materiales': name_values}))
+
+            elif db_name == 'DISOLUCIONES_DB':
+                # Data charged to database
+                st.markdown('##### Solutions  stored to the database:')
+                name_values = df['name_solution'].tolist()
+                st.write(pd.DataFrame({'Nombre de las disoluciones': name_values}))
+
+            elif db_name == 'SENSORES_DB':
+                # Data charged to database
+                st.markdown('##### Sensors  stored to the database:')
+                name_values = df['name_sensor'].tolist()
+                st.write(pd.DataFrame({'Nombre de los sensores': name_values})) 
+
+            elif db_name == 'LED_DB':
+                # Data charged to database
+                st.markdown('##### Leds  stored to the database:')
+                name_values = df['name_led'].tolist()
+                st.write(pd.DataFrame({'Nombre de los leds': name_values}))
+
+            elif db_name == 'GASES_DB':
+                # Remove the units and symbols
+                df['max_concentration_ppb'] = df['max_concentration_ppb'].apply(lambda row: remove_symbol_bottle(row))
+                # Data charged to database
+                st.markdown('##### Gases  stored to the database:')
+                name_values = df['name_gas'].tolist()
+                st.write(pd.DataFrame({'Nombre de los gases': name_values}))
+
+            elif db_name == 'MEDIDAS_DB':
+                # Remove the units and symbols
+                df['humidity_percentage'] = df['humidity_percentage'].apply(lambda row: remove_symbol_humidity(row))
+                # Add date to file name
+                df['label'] = df['label'].apply(lambda row: sort_gases_names(row))
+                # Data charged to database
+                st.markdown('##### Measurements stored to the database:')
+                name_values = df['conn_measurement'].tolist()
+                st.write(pd.DataFrame({'Nombre de las medidas': name_values}))
+
+                
+            # Transform NaT, None, NaN to Unkown
+            df = replace_nan_nat_none(df)
+            
+            # STORE THE DATA IN SILVER DB
+            # Connect with database
+            con = duckdb.connect(path_db)
+            table_name = ID_dict[db_name]['db_name'] + '_hist'   # Construct table name
+
+            if process_type == 'time':
+                # Change the ID column if process_type is different to 'total'. In the case of process_type='time', ID is different to index and
+                # the first value of this column will be the last value stored in the database. 
+                # Build the query
+                query_ID = "SELECT MAX(ID) AS max_id FROM " + table_name + ";"
+
+                # Read the las value of database
+                last_ID_df = con.execute(query_ID).df()
+                last_ID_value = last_ID_df.iloc[0,0] + 1
+
+                # Update the ID column
+                df['ID'] = range(last_ID_value, len(df) + last_ID_value)
+            
+            # Build the query
+            query_write = """
+                INSERT INTO {table_name} ({columns})
+                VALUES {values};
+            """
+            
+            # Write the data
+            db.write_df_to_db(con, df, table_name, query_write)
+
+            # Return the experiment added
+            #if db_name == 'MEDIDAS_DB':
+            #    return name_values
     

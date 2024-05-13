@@ -51,7 +51,7 @@ def read_directory_tdms(path):
 
 def check_time(names):    
     # Extract the date of last intake
-    date_df = pd.read_csv('../data/most_recent_data_charge.csv')
+    date_df = pd.read_csv('./data/most_recent_data_charge.csv')
     last_update_date = date_df['most_recent_data_charge'][0]
     
     # Filter the names
@@ -68,7 +68,8 @@ def read_last_charge_date():
     """
     date_df = pd.read_csv('./data/most_recent_data_charge.csv')
     date = date_df['most_recent_data_charge'][0]
-    return date
+    date_2 = date.split(' ')[0]
+    return date_2
 
 
 def update_last_charge_date(df):

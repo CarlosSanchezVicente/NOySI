@@ -8,6 +8,7 @@ from dotenv import dotenv_values
 import datetime
 import os   # Import data from directory
 import duckdb
+import streamlit as st
 
 
 
@@ -82,7 +83,7 @@ def read_directory_txt(process_type, path):
 
 def check_time(names):    
     # Extract the date of last intake
-    date_df = pd.read_csv('../data/most_recent_data_charge.csv')
+    date_df = pd.read_csv('./data/most_recent_data_charge.csv')
     last_update_date = date_df['most_recent_data_charge'][0]
     
     # Filter the names
@@ -93,7 +94,10 @@ def check_time(names):
 
 def transform_date(string, type_date):
     if type_date == 'start':
-        string_date = datetime.datetime.strptime(string, '%a %b %d %H:%M:%S CET %Y')
+        if 'CET' in string:
+            string_date = datetime.datetime.strptime(string, '%a %b %d %H:%M:%S CET %Y')
+        elif 'CEST' in string:
+            string_date = datetime.datetime.strptime(string, '%a %b %d %H:%M:%S CEST %Y')
         string_format = string_date.strftime('%Y-%m-%d %H:%M:%S.%f')
     else:
         string_format = datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S.%f')
@@ -280,6 +284,21 @@ def transform_optical_data_inlist(content, name_dataframe):
 def write_df_to_db(con, df, table_name, query_write):
     # Formatear las fechas en el DataFrame
     #df = format_dates_in_df(df)
+
+    # It's only necessary to change the ID only for 'optical_spectra' table because ID column is the same as index. But, the ID column 
+    # in 'optical_parameters'table is the experment name, so it isn't necessary to change it, due to this name will never be the same.
+    if table_name == 'optical_spectra':
+        # Change the ID column if process_type is different to 'total'. In the case of process_type='time', ID is different to index and
+        # the first value of this column will be the last value stored in the database. 
+        # Build the query
+        query_ID = "SELECT MAX(ID) AS max_id FROM " + table_name + ";"
+
+        # Read the las value of database
+        last_ID_df = con.execute(query_ID).df()
+        last_ID_value = last_ID_df.iloc[0,0] + 1
+
+        # Create a new column ID using the last value of database
+        df['ID'] = range(last_ID_value, len(df) + last_ID_value)
     
     # Obtener los nombres de las columnas del DataFrame
     columns = ','.join(df.columns)
@@ -295,10 +314,9 @@ def write_df_to_db(con, df, table_name, query_write):
 
 
 # MAIN FUNCTIONS
-def read_transform_optical():
-    path = 'G:/Otros ordenadores/PC Línea Metano/Espectros/'
-    process_type = 'total'
-    line = 'MethaneLine'
+def read_transform_optical(process_type, line, path):
+    #process_type = 'total'
+    #line = 'MethaneLine'
 
     # Obtain the files in the directory
     names_files = read_directory_txt('total', path)
@@ -311,13 +329,18 @@ def read_transform_optical():
     # Create empty dataframe
     config_complete_df = pd.DataFrame()
     data_complete_df = pd.DataFrame()
+
+    # Optical files charged
+    st.markdown('#### New optical experiment:')
+    st.write(pd.DataFrame({'Experiments processed': names_files['name']}))
         
     # Extract the data from each file
     for index, row in names_files.iterrows():
         # Obtain the complete path and name for each experiment
         complete_path_source = row['path']
         name_dataframe = row['name']
-        print('Path: ', complete_path_source, ' | Dataframe name: ', name_dataframe)
+        #print('Path: ', complete_path_source, ' | Dataframe name: ', name_dataframe)
+        st.text(name_dataframe)
         
         # Extract data from tdms and store the data in bronze folder
         new_data = read_data_store_data(complete_path_source, name_dataframe, line)
@@ -356,6 +379,6 @@ def read_transform_optical():
     """
 
     # Write the configuration optical process
-    #write_df_to_db(con, config_complete_df, 'optical_parameters', query_write)
+    write_df_to_db(con, config_complete_df, 'optical_parameters', query_write)
     # Write the spectra
     write_df_to_db(con, data_complete_df, 'optical_spectra', query_write)

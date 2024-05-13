@@ -2,7 +2,7 @@
 # Typical imports
 import numpy as np
 import pandas as pd
-#import datetime
+import datetime
 # File import
 #from nptdms import TdmsFile   # Import tdms files
 #import requests   # Make http GET and POST requests
@@ -16,6 +16,7 @@ import pandas as pd
 from dotenv import dotenv_values   # Load environment variables from a .env file in an application
 #import re
 import duckdb
+import streamlit as st
 # Processing
 import scipy #import signal
 #from scipy.optimize import curve_fit
@@ -91,7 +92,7 @@ def sensor_processing(df, bottle_name):
     return pos_df
 
 
-def add_date_to_pos(pos_df):
+def add_date_to_pos(df, pos_df):
     datetime_list = []
 
     for index, row in pos_df.iterrows():
@@ -99,7 +100,7 @@ def add_date_to_pos(pos_df):
         pos_temp = row['final_pos']
 
         # Store the datetime for last element of each semicycle
-        timestamp_value = pos_df.loc[pos_temp]['date_timestamp']
+        timestamp_value = df.loc[pos_temp]['date_timestamp']
 
         # Store the value in the list
         datetime_list.append(timestamp_value)
@@ -215,10 +216,38 @@ def response_calculation(data_df, data_complete_df, pos_complete_df):
     return response_complete_df
 
 
+# Function to obtain the last ID used in database and create a new ID column from this last value
+def update_ID(process_type, table_name, conn, df):
+    if process_type == 'time':
+        # Change the ID column if process_type is different to 'total'. In the case of process_type='time', ID is different to index and
+        # the first value of this column will be the last value stored in the database. 
+        # Build the query
+        query_ID = "SELECT MAX(ID) AS max_id FROM " + table_name + ";"
+
+        # Read the las value of database
+        last_ID_df = conn.execute(query_ID).df()
+        last_ID_value = last_ID_df.iloc[0,0] + 1
+
+        # Update the ID column
+        df['ID'] = range(last_ID_value, len(df) + last_ID_value)
+
+    return df
+
+
 # MAIN FUNCTIONS
-def electrical_data_transform(sensor_name):
+def electrical_data_transform(process_type, source, data_init_df):
     # Extract data from silver database
-    data_df = extract_data()
+    if source == 'database':
+        data_df = extract_data()
+    elif source == 'calculated_data':
+        # Extract only the necesary columns
+        data_df = data_init_df[['ID', 'file_title', 'load_ts', 'time_s', 'sensor1_ohm', 'sensor2_ohm',
+                        'sensor3_ohm', 'sensor4_ohm', 'bottle1_ppb', 'bottle2_ppb', 
+                        'bottle3_ppb', 'date_timestamp']].copy()
+        # Rewrite the index of the dataframe using the last value + 1 used in the last record already in the database.
+        data_df.set_index('ID', inplace=True, drop=False)
+
+    # Extract the name of experiment processed
     exp_name_list = data_df['file_title'].unique()
 
     # Create empty dataframes
@@ -227,6 +256,7 @@ def electrical_data_transform(sensor_name):
     response_complete_df = pd.DataFrame()
 
     for exp_name in exp_name_list:
+        #st.text(exp_name)
         df = data_df.loc[(data_df['file_title'] == exp_name)]
 
         # Obtain the column of bottle concentration
@@ -238,7 +268,7 @@ def electrical_data_transform(sensor_name):
             # Obtain the initial and final position per each cycle
             pos_df = sensor_processing(df, bottle_name)
             # Add date to pos_df
-            pos_df = add_date_to_pos(pos_df)
+            pos_df = add_date_to_pos(df, pos_df)
             # Add the name file
             pos_df = pos_df.assign(file_title=exp_name)    
 
@@ -290,9 +320,24 @@ def electrical_data_transform(sensor_name):
     pos_complete_df = pos_complete_df.reindex(columns=reorder_columns)
 
     # Other transformations in data_complete_df
+    # The date_timestamp and load_ts columns read from the database are in timestamp format, so there is no need 
+    # to convert them. But if we use the data previously calculated in the electrical_read_transform function, 
+    # it is necessary to convert str to timestamp.
+    if source == 'calculated_data': 
+        data_complete_df['date_timestamp'] = pd.to_datetime(data_complete_df['date_timestamp'])
+        data_complete_df['load_ts'] = pd.to_datetime(data_complete_df['load_ts'])
+        st.text('Antes de cambiar el formato')
+        st.text(pos_complete_df['final_date_timestamp'])
+        pos_complete_df['final_date_timestamp'] = pd.to_datetime(pos_complete_df['final_date_timestamp'])
+        st.text('Despues de cambiar el formato a datetime')
+        st.text(pos_complete_df['final_date_timestamp'])
+    # Transform timestamp format
     data_complete_df['date_timestamp'] = data_complete_df['date_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
     data_complete_df['load_ts'] = data_complete_df['load_ts'].dt.strftime('%Y-%m-%d %H:%M:%S')
     data_complete_df = data_complete_df.fillna(value=0)
+    pos_complete_df['final_date_timestamp'] = pos_complete_df['final_date_timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    st.text('Despues de cambiar el formato de datetime a str')
+    st.text(pos_complete_df['final_date_timestamp'])
 
     # Obtain the response of each cycle
     response_complete_df = response_calculation(data_df, data_complete_df, pos_complete_df)
@@ -300,6 +345,7 @@ def electrical_data_transform(sensor_name):
     # WRITE DATA TO GOLD DATAFRAME
     # Connect with database
     conn = duckdb.connect("./data/Gold/LabGold.db")
+
     # Query structure
     query_write = """
         INSERT INTO {table_name} ({columns})
@@ -307,13 +353,16 @@ def electrical_data_transform(sensor_name):
     """
 
     # Build the query and write the data to data_complete_df
-    table_name = 'data_methane_processed'   # Construct table name        
+    table_name = 'data_methane_processed'   # Construct table name    
+    #data_complete_df = update_ID(process_type, table_name, conn, data_complete_df)
     write_df_to_db(conn, data_complete_df, table_name, query_write)
 
     # Build the query and write the data to data_complete_df
-    table_name = 'data_methane_pos'   # Construct table name        
+    table_name = 'data_methane_pos'   # Construct table name    
+    pos_complete_df = update_ID(process_type, table_name, conn, pos_complete_df)
     write_df_to_db(conn, pos_complete_df, table_name, query_write)
 
     # Build the query and write the data to response_complete_df
-    table_name = 'data_methane_response'   # Construct table name        
+    table_name = 'data_methane_response'   # Construct table name   
+    response_complete_df = update_ID(process_type, table_name, conn, response_complete_df)
     write_df_to_db(conn, response_complete_df, table_name, query_write)

@@ -13,8 +13,10 @@ from dotenv import dotenv_values   # Load environment variables from a .env file
 #import re
 import duckdb
 #import warnings
+import streamlit as st
 # Processing
-#import scipy #import signal
+#import scipy 
+#import signal
 
 # IMPORT FUNCTIONS FROM MODULES
 from modules import read_directory as dir
@@ -27,7 +29,7 @@ def create_folder(name_dataframe, line):
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
     
     # Define and create the path to create new folder
-    folder_path = os.path.join('../data/Bronze/electrical_measurement/', current_date)
+    folder_path = os.path.join('./data/Bronze/electrical_measurement/', current_date)
 
     # Check if the folder exists or not
     if not os.path.exists(folder_path):
@@ -129,7 +131,7 @@ def obtain_data_electrical_m(process_type, ID_dict, line, path):
     data_df = pd.DataFrame(columns=columns)
     
     # Obtain the files in the directory
-    names_files = dir.read_directory_tdms('total', path)
+    names_files = dir.read_directory_tdms(path)
     
     # In the case that the user select a date to filter the name files to charge in db. 
     # If the process_type == 'total' the dataframe doesn't change
@@ -161,15 +163,30 @@ def obtain_data_electrical_m(process_type, ID_dict, line, path):
         else:
             data_df = pd.concat([data_df, new_data_trans], ignore_index=True)
 
-        # Data procesing
-        
+    # Print in streamlit the experiment added to database
+    unique_values = data_df['file_title'].unique().tolist()
+    st.markdown('#### New electrical experiment:')
+    st.write(pd.DataFrame({'Experiments processed': unique_values}))
 
     # STORE THE DATA IN SILVER DB
     # Connect with database
-    con = duckdb.connect("C:/Users/carlo/NOySI/data/Silver/LabSilver.db")
+    con = duckdb.connect("./data/Silver/LabSilver.db")
+    table_name = ID_dict['MethaneLine']['db_name']   # Construct table name
+
+    if process_type == 'time':
+        # Change the ID column if process_type is different to 'total'. In the case of process_type='time', ID is different to index and
+        # the first value of this column will be the last value stored in the database. 
+        # Build the query
+        query_ID = "SELECT MAX(ID) AS max_id FROM " + table_name + ";"
+
+        # Read the las value of database
+        last_ID_df = con.execute(query_ID).df()
+        last_ID_value = last_ID_df.iloc[0,0] + 1
+
+        # Create a new column ID using the last value of database
+        data_df['ID'] = range(last_ID_value, len(data_df) + last_ID_value)
 
     # Build the query
-    table_name = ID_dict['MethaneLine']['db_name']   # Construct table name
     print(table_name)
     query_write = """
         INSERT INTO {table_name} ({columns})
@@ -177,4 +194,7 @@ def obtain_data_electrical_m(process_type, ID_dict, line, path):
     """
 
     # Write the data
-    db.write_df_to_db(con, data_df, table_name, query_write)   
+    db.write_df_to_db(con, data_df, table_name, query_write)
+
+    # Return dataframe to process
+    return data_df

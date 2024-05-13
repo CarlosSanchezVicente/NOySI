@@ -1,21 +1,24 @@
 # IMPORTS LIBRARIES
 import streamlit as st
+import pandas as pd
 from dotenv import dotenv_values 
 
 # IMPORT FUNCTIONS FROM MODULES
-#from modules import notion_read_transform as notion
-#from modules import electrical_read_transform as elecr
-#from modules import electrical_processing as elecp
-#from modules import optical_read_transform as op
+from modules import notion_read_transform as notion
+from modules import electrical_read_transform as elecr
+from modules import electrical_processing as elecp
+from modules import optical_read_transform as op
+import streamlit.components.v1 as components
 
 
 # DEFINITION
 # General
-#config = dotenv_values('.env')
+config = dotenv_values('.env')
 # Notion
 
 # Electrical measurement
-#path_methane_line = config['path_methane_line']
+path_electrical_methane_line = config['path_electrical_methane_line']
+path_optical_methane_line = config['path_optical_methane_line']
 ID_dict_elec = {'MethaneLine':{'db_name': 'data_methane_line',
 
                           'DB_new_order':['ID','file_title', 'load_ts', 'time_s', 'sensor1_ohm', 'sensor2_ohm', 
@@ -66,34 +69,45 @@ ID_dict_elec = {'MethaneLine':{'db_name': 'data_methane_line',
 
 # MAIN FUNCTION
 def main():
-    # EXRACT DATA FROM ROW AND CLEAN IT: ROW -> BRONZE -> SILVER
-    
-    # NOTION: With this function Obtain data from notion, store the json in the bronze level, clean the data and store it in the 
-    # silver level
-    # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
-    # Defaults to: date='2024-01-01', pages_number=100
-    #notion.obtain_data_notion('total')
-
-    # ELECTRICAL MEASUREMENT
-    #elecr.obtain_data_electrical_m('total', ID_dict_elec, 'MethaneLine', path_methane_line)
-    #elecp.electrical_data_transform(df, sensor_name)
-
-    # OPTICAL MEASUREMENT
-    #op.read_transform_optical()
-
     # STREAMLIT CODE
     st.set_page_config(
         page_title='Home',
         page_icon='🏠'
     )
 
-    st.title("Main Page - NOySI Lab")
+    st.markdown("### Main Page - NoySI Lab")
     st.sidebar.success('Select a page')
+    st.warning('Check that all measurements have been completed before proceeding. \n \
+               If they are not finished it could cause problems in data ingestion.', icon="⚠️")
+    #mycode = "<script>alert('This box is me!')</script>"
+    #    components.html(mycode, height=0, width=0)
 
+    # EXRACT DATA FROM ROW AND CLEAN IT: ROW -> BRONZE -> SILVER -> GOLD
+    # With this function Obtain data from notion, store the jsons and files in the bronze level, clean the data and store it in the 
+    # silver level. In the end, the calculation will be store in gold database.
+    
+    # GENERAL CONFIGURATION
+    # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
+    
+    if st.button('Click to add the unprocessed data', type='primary'):
+        # NOTION 
+        # Defaults to: date='2024-01-01', pages_number=100
+        #notion.obtain_data_notion('time')   
+
+        # ELECTRICAL MEASUREMENT
+        # 
+        #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
+
+        # Source data: source = 'database' / 'calculated_data'
+        #elecp.electrical_data_transform('time', 'calculated_data', electrical_data_silver)
+
+        # OPTICAL MEASUREMENT
+        #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
+        pass
+        
 
 
 # MAIN EXECUTION
 if __name__ == '__main__':
-
     result = main()
-    print(result)
+    #print(result)
