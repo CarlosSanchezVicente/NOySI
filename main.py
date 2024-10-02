@@ -14,8 +14,6 @@ import streamlit.components.v1 as components
 # DEFINITION
 # General
 config = dotenv_values('.env')
-# Notion
-
 # Electrical measurement
 path_electrical_methane_line = config['path_electrical_methane_line']
 path_optical_methane_line = config['path_optical_methane_line']
@@ -90,12 +88,12 @@ def main():
     # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
     
     if st.button('Click to add the unprocessed data', type='primary'):
-        # NOTION 
-        # Defaults to: date='2024-01-01', pages_number=100
-        #notion.obtain_data_notion('time')   
+        # NOTION
+        
+        #notion.obtain_data_notion(config, headers, 'last_upload', '2024-01-01')   
 
         # ELECTRICAL MEASUREMENT
-        # 
+        
         #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
 
         # Source data: source = 'database' / 'calculated_data'

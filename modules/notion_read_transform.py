@@ -27,29 +27,24 @@ from modules import read_directory as dir
 # DEFINITIONS
 #config = dotenv_values('./_wip_/.env')
 #config = dotenv_values('.env')
-config = dotenv_values(os.path.join('..', '.env'))
-NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
-MATERIALES_DB_ID = config.get('MATERIALES_DB_ID')   # MATERIALES_DB_ID
-DISOLUCIONES_DB_ID = config.get('DISOLUCIONES_DB_ID')   # DISOLUCIONES_DB_ID
-SENSORES_DB_ID = config.get('SENSORES_DB_ID')   # SENSORES_DB_ID
-LED_DB_ID = config.get('LED_DB_ID')   # LED_DB_ID
-GASES_DB_ID = config.get('GASES_DB_ID')   # GASES_DB_ID
-MEDIDAS_DB_ID = config.get('MEDIDAS_DB_ID')   # MEDIDAS_DB_ID
-path_db = config.get('path_db')
+#config = dotenv_values(os.path.join('..', '.env'))
+#NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
+#MATERIALES_DB_ID = config.get('MATERIALES_DB_ID')   # MATERIALES_DB_ID
+#DISOLUCIONES_DB_ID = config.get('DISOLUCIONES_DB_ID')   # DISOLUCIONES_DB_ID
+#SENSORES_DB_ID = config.get('SENSORES_DB_ID')   # SENSORES_DB_ID
+#LED_DB_ID = config.get('LED_DB_ID')   # LED_DB_ID
+#GASES_DB_ID = config.get('GASES_DB_ID')   # GASES_DB_ID
+#MEDIDAS_DB_ID = config.get('MEDIDAS_DB_ID')   # MEDIDAS_DB_ID
+#path_db = config.get('path_db')
 
 # DEFINITIONS
-ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASES_DB_ID, MEDIDAS_DB_ID]
-st.text('config:')
-st.text(config)
+#ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASES_DB_ID, MEDIDAS_DB_ID]
 
-if NOTION_TOKEN is None:
-    st.error("El token de Notion no está configurado. Verifica el archivo .env.")
-
-headers = {
-    'Authorization': 'Bearer ' + NOTION_TOKEN,
-    'Content-Type': 'application/json',
-    'Notion-Version': '2022-06-28'
-}
+#headers = {
+#    'Authorization': 'Bearer ' + NOTION_TOKEN,
+#    'Content-Type': 'application/json',
+#    'Notion-Version': '2022-06-28'
+#}
 
 ID_dict = {'MATERIALES_DB':{'db_name': 'materials',
     
@@ -578,12 +573,13 @@ def replace_nan_nat_none(df):
 
 
 # MAIN FUNCTIONS
-def obtain_data_notion(process_type, pages_number=100):   #date='2024-01-01',
+def obtain_data_notion(config, headers, process_type, date, pages_number=100):   #date='2024-01-01',
     """Summary: function to obtain the pages of the databases or from last update('process_type' indicates the behavior). 
 
     Args:
         process_type (string): it indicates the behavior of the ingestion. 
             - 'process_type'=number -> download all pages indicated in pages_number. 
+            - 'process_type'=last_upload -> read the date of the last upload in the csv file.
             - 'process_type'=time -> download all pages from last update. 
         date (string, optional): date from which the information will be extracted from the database. The format of date would be: 
             YYYY-MM-DD. Defaults to 100. Defaults to None.
@@ -593,6 +589,13 @@ def obtain_data_notion(process_type, pages_number=100):   #date='2024-01-01',
         pages (json): data from Notion
     """
     # Definition
+    NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
+    headers = {
+        'Authorization': 'Bearer ' + NOTION_TOKEN,
+        'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28'
+    }
+    path_db = config.get('path_db')
     ID_list = ['MATERIALES_DB', 'DISOLUCIONES_DB', 'SENSORES_DB', 'LED_DB', 'GASES_DB', 'MEDIDAS_DB']
     st.markdown('#### New Notion records:')
 
@@ -619,9 +622,12 @@ def obtain_data_notion(process_type, pages_number=100):   #date='2024-01-01',
                 pages = get_pages_100(headers, DATABASE_ID, 100, process_type, path)
             else:
                 pages = get_pages_more_100(headers, DATABASE_ID, path, pages_number=None)
-        # If the user want to obtain the pages from specific date
-        elif process_type == 'time':
+        # If the user want to obtain the pages from last update
+        elif process_type == 'last_upload':
             date = dir.read_last_charge_date()
+            pages = get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date)
+        # If the user want to obtain the pages from specific date
+        elif process_type == 'date':
             pages = get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date)
         else:
             print('Error: You have entered an incorrect value for the data entry type. \nYou have to introduce: "number" or "total"')
