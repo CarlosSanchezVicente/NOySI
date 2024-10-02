@@ -25,7 +25,7 @@ from modules import read_directory as dir
 
 # DEFINITIONS
 #config = dotenv_values('./_wip_/.env')
-config = dotenv_values('.env')
+config = dotenv_values('.modules/env')
 NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
 MATERIALES_DB_ID = config.get('MATERIALES_DB_ID')   # MATERIALES_DB_ID
 DISOLUCIONES_DB_ID = config.get('DISOLUCIONES_DB_ID')   # DISOLUCIONES_DB_ID
@@ -37,9 +37,6 @@ path_db = config.get('path_db')
 
 # DEFINITIONS
 ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASES_DB_ID, MEDIDAS_DB_ID]
-
-if NOTION_TOKEN is None:
-    raise ValueError("El token de Notion no está configurado. Verifica el archivo .env.")
 
 headers = {
     'Authorization': 'Bearer ' + NOTION_TOKEN,
