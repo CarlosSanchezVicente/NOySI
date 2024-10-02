@@ -28,12 +28,12 @@ from modules import read_directory as dir
 config = dotenv_values('.env')
 NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
 MATERIALES_DB_ID = config.get('MATERIALES_DB_ID')   # MATERIALES_DB_ID
-DISOLUCIONES_DB_ID = config.get['DISOLUCIONES_DB_ID']   # DISOLUCIONES_DB_ID
-SENSORES_DB_ID = config.get['SENSORES_DB_ID']   # SENSORES_DB_ID
-LED_DB_ID = config.get['LED_DB_ID']   # LED_DB_ID
-GASES_DB_ID = config.get['GASES_DB_ID']   # GASES_DB_ID
-MEDIDAS_DB_ID = config.get['MEDIDAS_DB_ID']   # MEDIDAS_DB_ID
-path_db = config.get['path_db']
+DISOLUCIONES_DB_ID = config.get('DISOLUCIONES_DB_ID')   # DISOLUCIONES_DB_ID
+SENSORES_DB_ID = config.get('SENSORES_DB_ID')   # SENSORES_DB_ID
+LED_DB_ID = config.get('LED_DB_ID')   # LED_DB_ID
+GASES_DB_ID = config.get('GASES_DB_ID')   # GASES_DB_ID
+MEDIDAS_DB_ID = config.get('MEDIDAS_DB_ID')   # MEDIDAS_DB_ID
+path_db = config.get('path_db')
 
 # DEFINITIONS
 ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASES_DB_ID, MEDIDAS_DB_ID]
