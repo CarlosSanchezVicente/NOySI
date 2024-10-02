@@ -27,13 +27,13 @@ from modules import read_directory as dir
 #config = dotenv_values('./_wip_/.env')
 config = dotenv_values('.env')
 NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
-MATERIALES_DB_ID = config['MATERIALES_DB_ID']   # MATERIALES_DB_ID
-DISOLUCIONES_DB_ID = config['DISOLUCIONES_DB_ID']   # DISOLUCIONES_DB_ID
-SENSORES_DB_ID = config['SENSORES_DB_ID']   # SENSORES_DB_ID
-LED_DB_ID = config['LED_DB_ID']   # LED_DB_ID
-GASES_DB_ID = config['GASES_DB_ID']   # GASES_DB_ID
-MEDIDAS_DB_ID = config['MEDIDAS_DB_ID']   # MEDIDAS_DB_ID
-path_db = config['path_db']
+MATERIALES_DB_ID = config.get['MATERIALES_DB_ID']   # MATERIALES_DB_ID
+DISOLUCIONES_DB_ID = config.get['DISOLUCIONES_DB_ID']   # DISOLUCIONES_DB_ID
+SENSORES_DB_ID = config.get['SENSORES_DB_ID']   # SENSORES_DB_ID
+LED_DB_ID = config.get['LED_DB_ID']   # LED_DB_ID
+GASES_DB_ID = config.get['GASES_DB_ID']   # GASES_DB_ID
+MEDIDAS_DB_ID = config.get['MEDIDAS_DB_ID']   # MEDIDAS_DB_ID
+path_db = config.get['path_db']
 
 # DEFINITIONS
 ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASES_DB_ID, MEDIDAS_DB_ID]
