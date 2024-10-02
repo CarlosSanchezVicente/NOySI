@@ -39,7 +39,8 @@ path_db = config.get('path_db')
 # DEFINITIONS
 ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASES_DB_ID, MEDIDAS_DB_ID]
 
-print(type(config))
+if config is None:
+    st.error("El token de Notion no está configurado. Verifica el archivo .env.")
 
 headers = {
     'Authorization': 'Bearer ' + NOTION_TOKEN,
