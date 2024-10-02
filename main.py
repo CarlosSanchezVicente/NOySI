@@ -13,10 +13,11 @@ import streamlit.components.v1 as components
 
 # DEFINITION
 # General
-config = dotenv_values('.env')
+#config = dotenv_values('.env')
+
 # Electrical measurement
-path_electrical_methane_line = config['path_electrical_methane_line']
-path_optical_methane_line = config['path_optical_methane_line']
+#path_electrical_methane_line = config['path_electrical_methane_line']
+#path_optical_methane_line = config['path_optical_methane_line']
 ID_dict_elec = {'MethaneLine':{'db_name': 'data_methane_line',
 
                           'DB_new_order':['ID','file_title', 'load_ts', 'time_s', 'sensor1_ohm', 'sensor2_ohm', 
@@ -93,7 +94,7 @@ def main():
         #notion.obtain_data_notion(config, headers, 'last_upload', '2024-01-01')   
 
         # ELECTRICAL MEASUREMENT
-        
+
         #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
 
         # Source data: source = 'database' / 'calculated_data'

@@ -573,7 +573,7 @@ def replace_nan_nat_none(df):
 
 
 # MAIN FUNCTIONS
-def obtain_data_notion(config, headers, process_type, date, pages_number=100):   #date='2024-01-01',
+def obtain_data_notion(process_type, date, pages_number=100):   #config
     """Summary: function to obtain the pages of the databases or from last update('process_type' indicates the behavior). 
 
     Args:
@@ -589,13 +589,13 @@ def obtain_data_notion(config, headers, process_type, date, pages_number=100):  
         pages (json): data from Notion
     """
     # Definition
-    NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
+    #NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
     headers = {
         'Authorization': 'Bearer ' + NOTION_TOKEN,
         'Content-Type': 'application/json',
         'Notion-Version': '2022-06-28'
     }
-    path_db = config.get('path_db')
+    #path_db = config.get('path_db')
     ID_list = ['MATERIALES_DB', 'DISOLUCIONES_DB', 'SENSORES_DB', 'LED_DB', 'GASES_DB', 'MEDIDAS_DB']
     st.markdown('#### New Notion records:')
 
