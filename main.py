@@ -15,12 +15,7 @@ import streamlit.components.v1 as components
 # General
 config = dotenv_values('.env')
 # Notion
-NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
-headers = {
-    'Authorization': 'Bearer ' + NOTION_TOKEN,
-    'Content-Type': 'application/json',
-    'Notion-Version': '2022-06-28'
-}
+
 # Electrical measurement
 path_electrical_methane_line = config['path_electrical_methane_line']
 path_optical_methane_line = config['path_optical_methane_line']
