@@ -9,6 +9,7 @@ import duckdb
 import statistics
 from datetime import datetime
 import streamlit as st 
+import os
 
 # IMPORT FUNCTIONS FROM MODULES
 #from modules import notion_trans_s as transform_notion
@@ -25,8 +26,8 @@ from modules import read_directory as dir
 
 # DEFINITIONS
 #config = dotenv_values('./_wip_/.env')
-config = dotenv_values('.env')
-#config = dotenv_values('../.env')
+#config = dotenv_values('.env')
+config = dotenv_values(os.path.join('..', '.env'))
 NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
 MATERIALES_DB_ID = config.get('MATERIALES_DB_ID')   # MATERIALES_DB_ID
 DISOLUCIONES_DB_ID = config.get('DISOLUCIONES_DB_ID')   # DISOLUCIONES_DB_ID
