@@ -42,6 +42,8 @@ ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASE
 if NOTION_TOKEN is None:
     st.error("El token de Notion no está configurado. Verifica el archivo .env.")
 
+st.text(NOTION_TOKEN)
+
 headers = {
     'Authorization': 'Bearer ' + NOTION_TOKEN,
     'Content-Type': 'application/json',
