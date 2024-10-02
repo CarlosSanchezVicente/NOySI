@@ -25,8 +25,8 @@ from modules import read_directory as dir
 
 # DEFINITIONS
 #config = dotenv_values('./_wip_/.env')
-#config = dotenv_values('.env')
-config = dotenv_values('../.env')
+config = dotenv_values('.env')
+#config = dotenv_values('../.env')
 NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
 MATERIALES_DB_ID = config.get('MATERIALES_DB_ID')   # MATERIALES_DB_ID
 DISOLUCIONES_DB_ID = config.get('DISOLUCIONES_DB_ID')   # DISOLUCIONES_DB_ID
