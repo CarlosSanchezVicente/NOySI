@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 #from dotenv import dotenv_values 
 import hmac
+from streamlit.source_util import _on_pages_changed, get_pages
 
 # IMPORT FUNCTIONS FROM MODULES
 from modules import notion_read_transform as notion
@@ -14,6 +15,7 @@ import streamlit.components.v1 as components
 
 # DEFINITION
 # General
+DEFAULT_PAGE = "main.py"
 #config = dotenv_values('.env')
 
 # Electrical measurement
@@ -102,20 +104,60 @@ def check_password():
         st.error("😕 User not known or password incorrect")
     return False
 
+def clear_all_but_first_page():
+    current_pages = get_pages(DEFAULT_PAGE)
+
+    if len(current_pages.keys()) == 1:
+        return
+    get_all_pages()
+
+    # # Remove all but the first page
+    key, val = list(current_pages.items())[0]
+    st.write(current_pages[key])
+    current_pages.clear()
+    current_pages[key] = val
+
+    _on_pages_changed.send()
+
+def get_all_pages():
+    default_pages = get_pages(DEFAULT_PAGE)
+
+    pages_path = Path("pages.json")
+
+    if pages_path.exists():
+        saved_default_pages = json.loads(pages_path.read_text())
+    else:
+        saved_default_pages = default_pages.copy()
+        pages_path.write_text(json.dumps(default_pages, indent=4))
+
+    return saved_default_pages
+
+def show_all_pages():
+    current_pages = get_pages(DEFAULT_PAGE)
+
+    saved_pages = get_all_pages()
+
+    missing_keys = set(saved_pages.keys()) - set(current_pages.keys())
+
+    # Replace all the missing pages
+    for key in missing_keys:
+        current_pages[key] = saved_pages[key]
+
+    _on_pages_changed.send()
+
 
 # MAIN FUNCTION
 def main():
-    # STREAMLIT CODE
-    # Authentication
+    # Streamlit authentication
     if not check_password():
         st.stop()
     else:
-        # Inicializate Streamlit page
+        # STREAMLIT CODE
+        show_all_pages()   # Show all pages
         st.set_page_config(
             page_title='Home',
             page_icon='🏠'
         )
-
         st.markdown("### Main Page - NoySI Lab")
         st.sidebar.success('Select a page')
         st.warning('Check that all measurements have been completed before proceeding. \n \
@@ -129,16 +171,12 @@ def main():
         
         # GENERAL CONFIGURATION
         # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
-        
         if st.button('Click to add the unprocessed data', type='primary'):
             # NOTION
-            
             #notion.obtain_data_notion(config, headers, 'last_upload', '2024-01-01')   
 
             # ELECTRICAL MEASUREMENT
-
             #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
-
             # Source data: source = 'database' / 'calculated_data'
             #elecp.electrical_data_transform('time', 'calculated_data', electrical_data_silver)
 
