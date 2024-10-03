@@ -106,47 +106,49 @@ def check_password():
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
-    st.set_page_config(
-        page_title='Home',
-        page_icon='🏠'
-    )
+    # Authentication
+    if not check_password():
+        st.stop()
+    else:
+        # Inicializate Streamlit page
+        st.set_page_config(
+            page_title='Home',
+            page_icon='🏠'
+        )
 
-    st.markdown("### Main Page - NoySI Lab")
-    st.sidebar.success('Select a page')
-    st.warning('Check that all measurements have been completed before proceeding. \n \
-               If they are not finished it could cause problems in data ingestion.', icon="⚠️")
-    #mycode = "<script>alert('This box is me!')</script>"
-    #    components.html(mycode, height=0, width=0)
+        st.markdown("### Main Page - NoySI Lab")
+        st.sidebar.success('Select a page')
+        st.warning('Check that all measurements have been completed before proceeding. \n \
+                If they are not finished it could cause problems in data ingestion.', icon="⚠️")
+        #mycode = "<script>alert('This box is me!')</script>"
+        #    components.html(mycode, height=0, width=0)
 
-    # EXRACT DATA FROM ROW AND CLEAN IT: ROW -> BRONZE -> SILVER -> GOLD
-    # With this function Obtain data from notion, store the jsons and files in the bronze level, clean the data and store it in the 
-    # silver level. In the end, the calculation will be store in gold database.
-    
-    # GENERAL CONFIGURATION
-    # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
-    
-    if st.button('Click to add the unprocessed data', type='primary'):
-        # NOTION
+        # EXRACT DATA FROM ROW AND CLEAN IT: ROW -> BRONZE -> SILVER -> GOLD
+        # With this function Obtain data from notion, store the jsons and files in the bronze level, clean the data and store it in the 
+        # silver level. In the end, the calculation will be store in gold database.
         
-        #notion.obtain_data_notion(config, headers, 'last_upload', '2024-01-01')   
+        # GENERAL CONFIGURATION
+        # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
+        
+        if st.button('Click to add the unprocessed data', type='primary'):
+            # NOTION
+            
+            #notion.obtain_data_notion(config, headers, 'last_upload', '2024-01-01')   
 
-        # ELECTRICAL MEASUREMENT
+            # ELECTRICAL MEASUREMENT
 
-        #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
+            #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
 
-        # Source data: source = 'database' / 'calculated_data'
-        #elecp.electrical_data_transform('time', 'calculated_data', electrical_data_silver)
+            # Source data: source = 'database' / 'calculated_data'
+            #elecp.electrical_data_transform('time', 'calculated_data', electrical_data_silver)
 
-        # OPTICAL MEASUREMENT
-        #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
-        pass
+            # OPTICAL MEASUREMENT
+            #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
+            pass
         
 
 
 # MAIN EXECUTION
-if not check_password():
-    st.stop()
-
 if __name__ == '__main__':
     result = main()
     #print(result)
