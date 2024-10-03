@@ -127,8 +127,8 @@ def main():
     #hide_pages(page_names)
 
     # Streamlit authentication
-    if not check_password():
-        st.stop()
+    #if not check_password():
+    #    st.stop()
 
     # STREAMLIT CODE
     st.set_page_config(
