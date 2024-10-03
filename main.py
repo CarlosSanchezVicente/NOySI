@@ -3,7 +3,6 @@ import streamlit as st
 import pandas as pd
 #from dotenv import dotenv_values 
 import hmac
-from streamlit_option_menu import option_menu
 import os
 
 # IMPORT FUNCTIONS FROM MODULES
