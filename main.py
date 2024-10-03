@@ -4,6 +4,7 @@ import pandas as pd
 #from dotenv import dotenv_values 
 import hmac
 from streamlit.source_util import _on_pages_changed, get_pages
+import os
 
 # IMPORT FUNCTIONS FROM MODULES
 from modules import notion_read_transform as notion
@@ -105,10 +106,25 @@ def check_password():
     return False
 
 def get_all_pages():
-    default_pages = get_pages(DEFAULT_PAGE)
-    st.text(default_pages)
-    page_names = [details['page_name'] for details in default_pages.values()]
-    st.text(page_names)
+    # Folder path
+    pages_folder = os.path.join(os.getcwd(), 'pages')
+
+    # Nombre de la página principal
+    main_page = 'main.py'
+
+    # Verificar si la carpeta existe
+    if os.path.exists(pages_folder):
+        # Obtener los nombres de los archivos
+        file_names = os.listdir(pages_folder)
+        
+        # Añadir la página principal al inicio de la lista
+        file_names.insert(0, main_page)
+        
+        # Mostrar los nombres de los archivos
+        st.text(file_names)
+    else:
+        print(f"La carpeta {pages_folder} no existe.")
+
     return page_names
 
 def show_all_pages():
@@ -142,7 +158,8 @@ def clear_all_but_first_page():
 # MAIN FUNCTION
 def main():
     # Streamlit authentication
-    clear_all_but_first_page()
+    get_all_pages()
+    #clear_all_but_first_page()
     if not check_password():
         st.stop()
     else:
