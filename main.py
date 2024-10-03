@@ -104,24 +104,9 @@ def check_password():
         st.error("😕 User not known or password incorrect")
     return False
 
-def clear_all_but_first_page():
-    current_pages = get_pages(DEFAULT_PAGE)
-
-    if len(current_pages.keys()) == 1:
-        return
-    get_all_pages()
-
-    # # Remove all but the first page
-    key, val = list(current_pages.items())[0]
-    st.write(current_pages[key])
-    current_pages.clear()
-    current_pages[key] = val
-
-    _on_pages_changed.send()
-
 def get_all_pages():
     default_pages = get_pages(DEFAULT_PAGE)
-
+    st.text(default_pages)
     pages_path = Path("pages.json")
 
     if pages_path.exists():
@@ -145,6 +130,20 @@ def show_all_pages():
 
     _on_pages_changed.send()
 
+def clear_all_but_first_page():
+    current_pages = get_pages(DEFAULT_PAGE)
+
+    if len(current_pages.keys()) == 1:
+        return
+    get_all_pages()
+
+    # # Remove all but the first page
+    key, val = list(current_pages.items())[0]
+    st.write(current_pages[key])
+    current_pages.clear()
+    current_pages[key] = val
+
+    _on_pages_changed.send()
 
 # MAIN FUNCTION
 def main():
