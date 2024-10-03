@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 #from dotenv import dotenv_values 
-import streamlit_authenticator as stauth
 import hmac
 
 # IMPORT FUNCTIONS FROM MODULES
