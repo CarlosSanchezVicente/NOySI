@@ -149,6 +149,7 @@ def show_all_pages():
 # MAIN FUNCTION
 def main():
     # Streamlit authentication
+    clear_all_but_first_page()
     if not check_password():
         st.stop()
     else:
