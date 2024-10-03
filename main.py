@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 #from dotenv import dotenv_values 
 import hmac
-from streamlit.source_util import _on_pages_changed, get_pages
+from streamlit_option_menu import option_menu
 import os
 
 # IMPORT FUNCTIONS FROM MODULES
@@ -16,7 +16,7 @@ import streamlit.components.v1 as components
 
 # DEFINITION
 # General
-DEFAULT_PAGE = "main.py"
+main_page = "main.py"
 #config = dotenv_values('.env')
 
 # Electrical measurement
@@ -105,92 +105,62 @@ def check_password():
         st.error("😕 User not known or password incorrect")
     return False
 
-def get_all_pages():
-    # Folder path
+def obtain_page_names():
+    # Ruta a la carpeta 'pages'
     pages_folder = os.path.join(os.getcwd(), 'pages')
 
-    # Nombre de la página principal
-    main_page = 'main.py'
-
-    # Verificar si la carpeta existe
-    if os.path.exists(pages_folder):
-        # Obtener los nombres de los archivos
-        page_names = os.listdir(pages_folder)
+    # Obtener los nombres de los archivos
+    page_names = os.listdir(pages_folder)
+    page_names.insert(0, main_page)
         
-        # Añadir la página principal al inicio de la lista
-        page_names.insert(0, main_page)
-    else:
-        print(f"The folder {pages_folder} doesn't exist.")
-
     return page_names
 
-def show_all_pages():
-    current_pages = get_pages(DEFAULT_PAGE)
+def hide_pages(pages_to_hide):
+    for page in pages_to_hide:
+        st.sidebar.markdown(f"## {page}")
+        st.sidebar.markdown("This page is hidden.")
 
-    saved_pages = get_all_pages()
-
-    missing_keys = set(saved_pages.keys()) - set(current_pages.keys())
-
-    # Replace all the missing pages
-    for key in missing_keys:
-        current_pages[key] = saved_pages[key]
-
-    _on_pages_changed.send()
-
-def clear_all_but_first_page():
-    current_pages = get_pages(DEFAULT_PAGE)
-
-    if len(current_pages.keys()) == 1:
-        return
-    get_all_pages()
-
-    # # Remove all but the first page
-    key, val = list(current_pages.items())[0]
-    st.write(current_pages[key])
-    current_pages.clear()
-    current_pages[key] = val
-
-    _on_pages_changed.send()
 
 # MAIN FUNCTION
 def main():
+    page_names = obtain_page_names()
+    st.text(page_names)
+    hide_pages(page_names)
+
     # Streamlit authentication
-    get_all_pages()
-    #clear_all_but_first_page()
     if not check_password():
         st.stop()
-    else:
-        # STREAMLIT CODE
-        show_all_pages()   # Show all pages
-        st.set_page_config(
-            page_title='Home',
-            page_icon='🏠'
-        )
-        st.markdown("### Main Page - NoySI Lab")
-        st.sidebar.success('Select a page')
-        st.warning('Check that all measurements have been completed before proceeding. \n \
-                If they are not finished it could cause problems in data ingestion.', icon="⚠️")
-        #mycode = "<script>alert('This box is me!')</script>"
-        #    components.html(mycode, height=0, width=0)
 
-        # EXRACT DATA FROM ROW AND CLEAN IT: ROW -> BRONZE -> SILVER -> GOLD
-        # With this function Obtain data from notion, store the jsons and files in the bronze level, clean the data and store it in the 
-        # silver level. In the end, the calculation will be store in gold database.
+    # STREAMLIT CODE
+    st.set_page_config(
+        page_title='Home',
+        page_icon='🏠'
+    )
+    st.markdown("### Main Page - NoySI Lab")
+    st.sidebar.success('Select a page')
+    st.warning('Check that all measurements have been completed before proceeding. \n \
+            If they are not finished it could cause problems in data ingestion.', icon="⚠️")
+    #mycode = "<script>alert('This box is me!')</script>"
+    #    components.html(mycode, height=0, width=0)
+
+    # EXRACT DATA FROM ROW AND CLEAN IT: ROW -> BRONZE -> SILVER -> GOLD
+    # With this function Obtain data from notion, store the jsons and files in the bronze level, clean the data and store it in the 
+    # silver level. In the end, the calculation will be store in gold database.
         
-        # GENERAL CONFIGURATION
-        # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
-        if st.button('Click to add the unprocessed data', type='primary'):
-            # NOTION
-            #notion.obtain_data_notion(config, headers, 'last_upload', '2024-01-01')   
+    # GENERAL CONFIGURATION
+    # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
+    if st.button('Click to add the unprocessed data', type='primary'):
+        # NOTION
+        #notion.obtain_data_notion(config, headers, 'last_upload', '2024-01-01')   
 
-            # ELECTRICAL MEASUREMENT
-            #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
-            # Source data: source = 'database' / 'calculated_data'
-            #elecp.electrical_data_transform('time', 'calculated_data', electrical_data_silver)
+        # ELECTRICAL MEASUREMENT
+        #electrical_data_silver = elecr.obtain_data_electrical_m('time', ID_dict_elec, 'MethaneLine', path_electrical_methane_line)
+        # Source data: source = 'database' / 'calculated_data'
+        #elecp.electrical_data_transform('time', 'calculated_data', electrical_data_silver)
 
-            # OPTICAL MEASUREMENT
-            #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
-            pass
+        # OPTICAL MEASUREMENT
+        #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
+        pass
         
 
 
