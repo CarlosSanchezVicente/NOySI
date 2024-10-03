@@ -124,7 +124,6 @@ def hide_pages(pages_to_hide):
 # MAIN FUNCTION
 def main():
     page_names = obtain_page_names()
-    st.text(page_names)
     #hide_pages(page_names)
 
     # Streamlit authentication
