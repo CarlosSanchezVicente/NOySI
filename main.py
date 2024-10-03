@@ -115,15 +115,12 @@ def get_all_pages():
     # Verificar si la carpeta existe
     if os.path.exists(pages_folder):
         # Obtener los nombres de los archivos
-        file_names = os.listdir(pages_folder)
+        page_names = os.listdir(pages_folder)
         
         # Añadir la página principal al inicio de la lista
-        file_names.insert(0, main_page)
-        
-        # Mostrar los nombres de los archivos
-        st.text(file_names)
+        page_names.insert(0, main_page)
     else:
-        print(f"La carpeta {pages_folder} no existe.")
+        print(f"The folder {pages_folder} doesn't exist.")
 
     return page_names
 
