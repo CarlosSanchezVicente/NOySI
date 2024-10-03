@@ -107,15 +107,9 @@ def check_password():
 def get_all_pages():
     default_pages = get_pages(DEFAULT_PAGE)
     st.text(default_pages)
-    pages_path = Path("pages.json")
-
-    if pages_path.exists():
-        saved_default_pages = json.loads(pages_path.read_text())
-    else:
-        saved_default_pages = default_pages.copy()
-        pages_path.write_text(json.dumps(default_pages, indent=4))
-
-    return saved_default_pages
+    page_names = [details['page_name'] for details in default_pages.values()]
+    st.text(page_names)
+    return page_names
 
 def show_all_pages():
     current_pages = get_pages(DEFAULT_PAGE)
