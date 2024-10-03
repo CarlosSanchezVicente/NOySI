@@ -116,8 +116,9 @@ def obtain_page_names():
 
 def hide_pages(pages_to_hide):
     for page in pages_to_hide:
-        st.sidebar.markdown(f"## {page}")
-        st.sidebar.markdown("This page is hidden.")
+        pass
+        #st.sidebar.markdown(f"## {page}")
+        #st.sidebar.markdown("This page is hidden.")
 
 
 # MAIN FUNCTION
