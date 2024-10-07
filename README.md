@@ -47,6 +47,7 @@ This is the visualization on streamlit
 - DBeaver==23.3.2
 - sqlite==3.41.2
 - streamlit==1.31.1
+- streamlit-authenticator
 
 
 ### 📁 Folder structure
