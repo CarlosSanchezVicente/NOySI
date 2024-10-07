@@ -152,6 +152,7 @@ def main():
     with st.sidebar:
         st.text("NoySI")
     add_logo()
+    config_sidebar()
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
