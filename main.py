@@ -69,6 +69,16 @@ ID_dict_elec = {'MethaneLine':{'db_name': 'data_methane_line',
 
 
 # AUTHENTICATION
+def add_logo():
+    st.markdown(
+    """
+    <div style="text-align: right;">
+        <img src="csic_logo.png" width="100" alt="Logo">  <!-- Cambia el tamaño según lo necesites -->
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 def check_password():
     """Returns `True` if the user had a correct password."""
 
@@ -117,26 +127,35 @@ def obtain_page_names():
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
+    # Add logo to the login page
+    #logo_container = st.container()
+    #with logo_container:
+    #    st.image('csic_logo.png', use_column_width=True)
+    add_logo()
+
+    # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
         st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
+
+    # User authentication
     if not check_password():
         st.stop()
 
+    # Config streamlit page
     st.set_page_config(
         page_title='Home',
-        page_icon='🏠'
-    )
+        page_icon='🏠')
     st.markdown("### Main Page - NoySI Lab")
     st.sidebar.success('Select a page')
     st.warning('Check that all measurements have been completed before proceeding. \n \
             If they are not finished it could cause problems in data ingestion.', icon="⚠️")
-    #mycode = "<script>alert('This box is me!')</script>"
-    #    components.html(mycode, height=0, width=0)
+
 
     # EXRACT DATA FROM ROW AND CLEAN IT: ROW -> BRONZE -> SILVER -> GOLD
     # With this function Obtain data from notion, store the jsons and files in the bronze level, clean the data and store it in the 
     # silver level. In the end, the calculation will be store in gold database.
         
+
     # GENERAL CONFIGURATION
     # Ingestion type: process_type = 'total' (total pages) / 'time' (pages from specific date)/ 'number' (specific pages number). 
     if st.button('Click to add the unprocessed data', type='primary'):
