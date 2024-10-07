@@ -114,28 +114,10 @@ def obtain_page_names():
         
     return page_names
 
-def hide_pages(pages_to_hide):
-    available_pages = []
-
-    # Iteramos por todas las páginas
-    for page in os.listdir('pages'):
-        # Obtenemos solo los archivos .py y las que no están ocultas
-        if page.endswith('.py') and page not in pages_to_hide:
-            page_name = page.replace("-", " ").replace(".py", "")
-            available_pages.append(page_name)
-
-    # Mostramos las páginas que no están ocultas
-    for page in available_pages:
-        st.sidebar.markdown(f"## {page}")
-
 
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
-    pages_to_hide = obtain_page_names()
-    st.text(pages_to_hide)
-    hide_pages(pages_to_hide)
-
     if not check_password():
         st.stop()
 
@@ -176,4 +158,3 @@ def main():
 # MAIN EXECUTION
 if __name__ == '__main__':
     result = main()
-    #print(result)
