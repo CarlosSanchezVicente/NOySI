@@ -123,13 +123,6 @@ def hide_pages(pages_to_hide):
 
 # MAIN FUNCTION
 def main():
-    #page_names = obtain_page_names()
-    #hide_pages(page_names)
-
-    # Streamlit authentication
-    #if not check_password():
-    #    st.stop()
-
     # STREAMLIT CODE
     st.set_page_config(
         page_title='Home',
@@ -167,3 +160,11 @@ def main():
 if __name__ == '__main__':
     result = main()
     #print(result)
+
+
+#page_names = obtain_page_names()
+    #hide_pages(page_names)
+
+    # Streamlit authentication
+    #if not check_password():
+    #    st.stop()
