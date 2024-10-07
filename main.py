@@ -1,7 +1,6 @@
 # IMPORTS LIBRARIES
 import streamlit as st
 import streamlit.components.v1 as components
-import streamlit_authenticator as stauth
 import pandas as pd
 import hmac
 import os
