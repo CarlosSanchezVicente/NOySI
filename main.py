@@ -139,8 +139,8 @@ def main():
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1 style="margin: 0;">NoySI</h1>
             <div style="display: flex; gap: 10px;">
-                <img src="https://github.com/CarlosSanchezVicente/NOySI/blob/main/img/csic_logo.png" width="100" alt="Logo_csic">
-                <img src="https://github.com/CarlosSanchezVicente/NOySI/blob/main/img/ITEFI_logo.png" width="100" alt="Logo_itefi">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Logotipo_del_CSIC.svg" width="100" alt="Logo_csic">
+                <img src="https://www.itefi.csic.es/sites/default/files/logos/LOGO-ITEFI-color.svg" width="100" alt="Logo_itefi">
             </div>
         </div>
         """,
