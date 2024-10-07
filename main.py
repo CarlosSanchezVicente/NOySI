@@ -73,7 +73,7 @@ def add_logo():
     st.markdown(
     """
     <div style="text-align: right;">
-        <img src="csic_logo.png" width="100" alt="Logo">  <!-- Cambia el tamaño según lo necesites -->
+        <img src="./img/csic_logo.png" width="100" alt="Logo">  <!-- Cambia el tamaño según lo necesites -->
     </div>
     """,
     unsafe_allow_html=True
@@ -128,10 +128,10 @@ def obtain_page_names():
 def main():
     # STREAMLIT CODE
     # Add logo to the login page
-    logo_container = st.container()
-    with logo_container:
-        st.image('./img/csic_logo.png', use_column_width=True)
-    #add_logo()
+    #logo_container = st.container()
+    #with logo_container:
+    #    st.image('./img/csic_logo.png', use_column_width=True)
+    add_logo()
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
