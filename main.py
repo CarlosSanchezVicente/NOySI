@@ -134,10 +134,6 @@ def obtain_page_names():
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
-    # Add research name group and logos
-    add_logo()
-    st.logo('./img/NoySI.png', size="medium")
-
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
         st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
@@ -145,6 +141,10 @@ def main():
     # User authentication
     if not check_password():
         st.stop()
+
+    # Add research name group and logos
+    add_logo()
+    st.logo('./img/NoySI.png', size="medium")
 
     # Config streamlit page
     st.set_page_config(
