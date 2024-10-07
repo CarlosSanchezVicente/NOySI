@@ -71,13 +71,19 @@ ID_dict_elec = {'MethaneLine':{'db_name': 'data_methane_line',
 # AUTHENTICATION
 def add_logo():
     st.markdown(
-    """
-    <div style="text-align: right;">
-        <img src="./img/csic_logo.png" width="100" alt="Logo">  <!-- Cambia el tamaño según lo necesites -->
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+        """
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="margin: 0;">NoySI</h1>
+            <div style="display: flex; gap: 10px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Logotipo_del_CSIC.svg" width="100" alt="Logo_csic">
+                <img src="https://www.itefi.csic.es/sites/default/files/logos/LOGO-ITEFI-color.svg" width="100" alt="Logo_itefi">
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown('##')   # Add blanck space between two streamlit components
+    #st.logo('./img/csic_logo.png', size="small")
 
 def check_password():
     """Returns `True` if the user had a correct password."""
@@ -127,26 +133,10 @@ def obtain_page_names():
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
-    # Add logo to the login page
-    st.logo('./img/csic_logo.png', size="small")
-    #logo_container = st.container()
-    #with logo_container:
-    #    st.image('./img/ITEFI_logo.png', width=200)
-    
-    # Añadir el logo y el nombre NoySI uno al lado del otro
-    st.markdown(
-        """
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 style="margin: 0;">NoySI</h1>
-            <div style="display: flex; gap: 10px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Logotipo_del_CSIC.svg" width="100" alt="Logo_csic">
-                <img src="https://www.itefi.csic.es/sites/default/files/logos/LOGO-ITEFI-color.svg" width="100" alt="Logo_itefi">
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown('##')   # Add blanck space between two streamlit components
+    # Add research name group and logos
+    with st.sidebar:
+        st.text("NoySI")
+    add_logo()
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
