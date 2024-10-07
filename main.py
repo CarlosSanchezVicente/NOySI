@@ -111,6 +111,7 @@ def check_password():
 
     # Return True if the username + password is validated.
     if st.session_state.get("password_correct", False):
+        st.session_state['authentication_status'] = True
         return True
 
     # Show inputs for username + password.
