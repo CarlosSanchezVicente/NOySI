@@ -6,6 +6,11 @@ import altair as alt
 import datetime
 import re
 
+# AUTHENTICATION STATUS
+if not st.session_state.authentication_status:
+    st.info('Please Login from the Home page and try again.')
+    st.stop()
+
 # Necessary to use duckdb module in streamlit
 #atp_duck = duckdb.connect('atp.duck.db', read_only=True)
 
