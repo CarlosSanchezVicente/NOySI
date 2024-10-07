@@ -131,7 +131,8 @@ def main():
     #logo_container = st.container()
     #with logo_container:
     #    st.image('./img/csic_logo.png', use_column_width=True)
-    add_logo()
+    #add_logo()
+    st.logo('./img/csic_logo.png', size="small")
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
