@@ -134,6 +134,13 @@ def obtain_page_names():
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
+    # Config streamlit page
+    st.set_page_config(
+        page_title='Home',
+        page_icon='🏠')
+    add_logo()
+    st.logo('./img/NoySI.png', size="medium")
+
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
         st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
@@ -142,15 +149,7 @@ def main():
     if not check_password():
         st.stop()
 
-    # Add research name group and logos
-    add_logo()
-    st.logo('./img/NoySI.png', size="medium")
-
-    # Config streamlit page
-    st.set_page_config(
-        page_title='Home',
-        page_icon='🏠')
-    #st.markdown("### Main Page - NoySI Lab")
+    # Add another elements
     st.sidebar.success('Select a page')
     st.warning('Check that all measurements have been completed before proceeding. \n \
             If they are not finished it could cause problems in data ingestion.', icon="⚠️")
