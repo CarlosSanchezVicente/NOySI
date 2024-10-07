@@ -137,13 +137,15 @@ def main():
     st.markdown(
         """
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 style="margin-right: 10px;">NoySI</h1>
-            <div style="display: flex;">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJuJPFF97QH4i4ttAYh246tfqJxObQXrp7jA&s" width="50" alt="Logo_csic">
+            <h1 style="margin: 0;">NoySI</h1>
+            <div style="display: flex; gap: 10px;">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJuJPFF97QH4i4ttAYh246tfqJxObQXrp7jA&s" width="100" alt="Logo_csic">
                 <img src="https://www.itefi.csic.es/sites/default/files/logos/LOGO-ITEFI-color.svg" width="100" alt="Logo_itefi">
+            </div>
         </div>
         """,
-        unsafe_allow_html=True)
+        unsafe_allow_html=True
+    )
     st.markdown('##')   # Add blanck space between two streamlit components
 
     # Inicializate 'authentication_status' variable
