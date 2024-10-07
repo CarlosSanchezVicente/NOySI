@@ -7,3 +7,13 @@ import streamlit as st
 if not st.session_state['authentication_status']:
     st.info('Please Login from the Home page and try again.')
     st.stop()
+
+# CONFIGURATION PAGE
+#st.title('Data analysis and plot the experiment')
+st.set_page_config(
+        page_title='Machine Learning',
+        page_icon='🧠'
+    )
+st.logo('./img/NoySI.png', size="medium")
+#st.sidebar.success('Select the parameters:')
+st.sidebar.markdown("### Select the parameters:")

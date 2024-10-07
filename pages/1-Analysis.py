@@ -109,7 +109,7 @@ st.set_page_config(
         page_title='Analysis',
         page_icon='📈'
     )
-
+st.logo('./img/NoySI.png', size="medium")
 #st.sidebar.success('Select the parameters:')
 st.sidebar.markdown("### Select the parameters:")
 
