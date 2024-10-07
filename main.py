@@ -132,6 +132,16 @@ def main():
     logo_container = st.container()
     with logo_container:
         st.image('./img/ITEFI_logo.png', width=200)
+    
+    # Añadir el logo y el nombre NoySI uno al lado del otro
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center;">
+            <h1 style="margin-right: 10px;">NoySI</h1>
+            <img src="./img/ITEFI_logo.png" width="50" alt="Logo">  <!-- Cambia el tamaño según lo necesites -->
+        </div>
+        """,
+        unsafe_allow_html=True)
     st.markdown('##')   # Add blanck space between two streamlit components
 
     # Inicializate 'authentication_status' variable
