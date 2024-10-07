@@ -117,6 +117,8 @@ def obtain_page_names():
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
+    if 'authentication_status' not in st.session_state:
+        st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
     if not check_password():
         st.stop()
 
