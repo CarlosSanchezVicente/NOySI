@@ -129,16 +129,17 @@ def main():
     # STREAMLIT CODE
     # Add logo to the login page
     st.logo('./img/csic_logo.png', size="small")
-    logo_container = st.container()
-    with logo_container:
-        st.image('./img/ITEFI_logo.png', width=200)
+    #logo_container = st.container()
+    #with logo_container:
+    #    st.image('./img/ITEFI_logo.png', width=200)
     
     # Añadir el logo y el nombre NoySI uno al lado del otro
     st.markdown(
         """
         <div style="display: flex; align-items: center;">
             <h1 style="margin-right: 10px;">NoySI</h1>
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJuJPFF97QH4i4ttAYh246tfqJxObQXrp7jA&s" width="50" alt="Logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJuJPFF97QH4i4ttAYh246tfqJxObQXrp7jA&s" width="100" alt="Logo_csic">
+            <img src="https://www.itefi.csic.es/sites/default/files/logos/LOGO-ITEFI-color.svg" width="50" alt="Logo_itefi">
         </div>
         """,
         unsafe_allow_html=True)
@@ -156,7 +157,7 @@ def main():
     st.set_page_config(
         page_title='Home',
         page_icon='🏠')
-    st.markdown("### Main Page - NoySI Lab")
+    #st.markdown("### Main Page - NoySI Lab")
     st.sidebar.success('Select a page')
     st.warning('Check that all measurements have been completed before proceeding. \n \
             If they are not finished it could cause problems in data ingestion.', icon="⚠️")
