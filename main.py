@@ -124,6 +124,9 @@ def hide_pages(pages_to_hide):
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
+    if not check_password():
+        st.stop()
+
     st.set_page_config(
         page_title='Home',
         page_icon='🏠'
