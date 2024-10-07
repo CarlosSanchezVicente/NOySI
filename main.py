@@ -134,10 +134,8 @@ def obtain_page_names():
 def main():
     # STREAMLIT CODE
     # Add research name group and logos
-    with st.sidebar:
-        st.text("NoySI")
     add_logo()
-    st.sidebar.title("NoySI")
+    st.logo('NoySI', size="Medium")
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
