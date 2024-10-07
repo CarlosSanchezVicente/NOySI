@@ -130,7 +130,7 @@ def main():
     # Add logo to the login page
     logo_container = st.container()
     with logo_container:
-        st.image('csic_logo.png', use_column_width=True)
+        st.image('./img/csic_logo.png', use_column_width=True)
     #add_logo()
 
     # Inicializate 'authentication_status' variable
