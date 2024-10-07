@@ -138,7 +138,7 @@ def main():
         """
         <div style="display: flex; align-items: center;">
             <h1 style="margin-right: 10px;">NoySI</h1>
-            <img src="./img/ITEFI_logo.png" width="50" alt="Logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJuJPFF97QH4i4ttAYh246tfqJxObQXrp7jA&s" width="50" alt="Logo">
         </div>
         """,
         unsafe_allow_html=True)
