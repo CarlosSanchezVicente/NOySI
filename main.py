@@ -138,7 +138,7 @@ def main():
         """
         <div style="display: flex; align-items: center;">
             <h1 style="margin-right: 10px;">NoySI</h1>
-            <img src="./img/ITEFI_logo.png" width="50" alt="Logo">  <!-- Cambia el tamaño según lo necesites -->
+            <img src="./img/ITEFI_logo.png" width="50" alt="Logo">
         </div>
         """,
         unsafe_allow_html=True)
