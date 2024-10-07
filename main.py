@@ -135,7 +135,7 @@ def main():
     # STREAMLIT CODE
     # Add research name group and logos
     add_logo()
-    st.logo('./img/noysi.png', size="small")
+    st.logo('./img/NoySI.png', size="small")
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
