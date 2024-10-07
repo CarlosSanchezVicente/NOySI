@@ -128,12 +128,10 @@ def obtain_page_names():
 def main():
     # STREAMLIT CODE
     # Add logo to the login page
-    #logo_container = st.container()
-    #with logo_container:
-    #    st.image('./img/csic_logo.png', use_column_width=True)
-    #add_logo()
     st.logo('./img/csic_logo.png', size="small")
-    st.logo('./img/ITEFI_logo.png', size="small")
+    #logo_container = st.container()
+    with logo_container:
+        st.image('./img/ITEFI_logo.png', width=100)
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
