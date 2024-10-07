@@ -136,7 +136,7 @@ def main():
         st.stop()
 
     # Una vez autenticado, mostramos todas las páginas
-    hide_pages(pages_to_hide=[])  # Lista vacía porque queremos mostrar todas las páginas
+    st.experimental_set_query_params(page='main')
 
     st.set_page_config(
         page_title='Home',
