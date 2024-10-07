@@ -86,19 +86,20 @@ def add_logo():
     #st.logo('./img/csic_logo.png', size="small")
 
 def config_sidebar():
-    app = option_menu(
-                menu_title='Navigation',
+    with st.sidebar:        
+            app = option_menu(
+                menu_title='NoySI',
                 options=['Sign-In','Sign-Up','Forgot Username','Forgot Password'],
                 icons=['person-circle','person-add','trophy-fill','chat-fill','info-circle-fill'],
                 menu_icon='list',
                 default_index=1,
                 styles={
-                    "container": {"padding": "5!important"},
+                    "container": {"padding": "5!important","background-color":'black'},
         "icon": {"color": "white", "font-size": "23px"}, 
         "nav-link": {"color":"white","font-size": "20px", "text-align": "left", "margin":"0px", "--hover-color": "blue"},
         "nav-link-selected": {"background-color": "#02ab21"},}
                 
-        )
+                )
 
 def check_password():
     """Returns `True` if the user had a correct password."""
