@@ -133,6 +133,7 @@ def hide_pages(pages_to_hide):
 def main():
     # STREAMLIT CODE
     pages_to_hide = obtain_page_names()
+    st.text(pages_to_hide)
     hide_pages(pages_to_hide)
 
     if not check_password():
