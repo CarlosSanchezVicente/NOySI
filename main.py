@@ -110,7 +110,7 @@ def obtain_page_names():
 
     # Obtener los nombres de los archivos
     page_names = os.listdir(pages_folder)
-    page_names.insert(0, main_page)
+    #page_names.insert(0, main_page)
         
     return page_names
 
@@ -132,11 +132,13 @@ def hide_pages(pages_to_hide):
 # MAIN FUNCTION
 def main():
     # STREAMLIT CODE
+    pages_to_hide = obtain_page_names()
+    hide_pages(pages_to_hide)
+
     if not check_password():
         st.stop()
 
-    # Una vez autenticado, mostramos todas las páginas
-    st.experimental_set_query_params(page='main')
+    hide_pages(pages_to_hide=[])
 
     st.set_page_config(
         page_title='Home',
