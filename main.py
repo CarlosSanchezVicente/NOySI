@@ -1,7 +1,7 @@
 # IMPORTS LIBRARIES
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
-#from dotenv import dotenv_values 
 import hmac
 import os
 
@@ -10,7 +10,6 @@ from modules import notion_read_transform as notion
 from modules import electrical_read_transform as elecr
 from modules import electrical_processing as elecp
 from modules import optical_read_transform as op
-import streamlit.components.v1 as components
 
 
 # DEFINITION
@@ -120,8 +119,6 @@ def main():
     # STREAMLIT CODE
     if not check_password():
         st.stop()
-
-    hide_pages(pages_to_hide=[])
 
     st.set_page_config(
         page_title='Home',
