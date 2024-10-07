@@ -129,7 +129,7 @@ def main():
     # STREAMLIT CODE
     # Add logo to the login page
     st.logo('./img/csic_logo.png', size="small")
-    #logo_container = st.container()
+    logo_container = st.container()
     with logo_container:
         st.image('./img/ITEFI_logo.png', width=100)
 
