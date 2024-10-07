@@ -131,7 +131,8 @@ def main():
     st.logo('./img/csic_logo.png', size="small")
     logo_container = st.container()
     with logo_container:
-        st.image('./img/ITEFI_logo.png', width=100)
+        st.image('./img/ITEFI_logo.png', width=200)
+    st.markdown('##')   # Add blanck space between two streamlit components
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
