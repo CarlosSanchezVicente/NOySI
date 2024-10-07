@@ -139,7 +139,7 @@ def main():
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1 style="margin-right: 10px;">NoySI</h1>
             <div style="display: flex;">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJuJPFF97QH4i4ttAYh246tfqJxObQXrp7jA&s" width="100" alt="Logo_csic">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJuJPFF97QH4i4ttAYh246tfqJxObQXrp7jA&s" width="50" alt="Logo_csic">
                 <img src="https://www.itefi.csic.es/sites/default/files/logos/LOGO-ITEFI-color.svg" width="100" alt="Logo_itefi">
         </div>
         """,
