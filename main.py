@@ -96,7 +96,8 @@ def check_password():
             st.form_submit_button("Log in", on_click=password_entered)
 
     def password_entered():
-        """Checks whether a password entered by the user is correct."""
+        """Checks whether a password entered by the user is correct. The compare_digest function is used as a security layer against timing 
+        attacks, so that the comparison between passwords always has the same duration."""
         if st.session_state["username"] in st.secrets[
             "passwords"
         ] and hmac.compare_digest(
