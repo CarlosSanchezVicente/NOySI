@@ -591,7 +591,7 @@ def obtain_data_notion(process_type, date, pages_number=100):   #config
     # Definition
     #NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
     headers = {
-        'Authorization': 'Bearer ' + NOTION_TOKEN,
+        'Authorization': 'Bearer ' + st.secrets["NOTION_TOKEN "],   #NOTION_TOKEN,
         'Content-Type': 'application/json',
         'Notion-Version': '2022-06-28'
     }

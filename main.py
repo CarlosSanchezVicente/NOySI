@@ -144,7 +144,9 @@ def main():
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
         st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
-
+    
+    
+    st.text(st.secrets["NOTION_TOKEN "])
     # User authentication
     if not check_password():
         st.stop()

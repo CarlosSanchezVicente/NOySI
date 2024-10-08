@@ -1,4 +1,4 @@
-# NOySI lab project
+# NoySI lab project
 Welcome to this project designed in the Nanosensors and Intelligent Systems (NOySI) research group of CSIC.
 
 ### 🎯 The project description
@@ -44,10 +44,15 @@ This is the visualization on streamlit
   - duckdb==0.9.2
   - notion_client==2.2.1
   - nptdms==1.7.1
+  - streamlit-authenticator
+  - gdown
+  - PyDrive 
+  - oauth2client
+  - google-auth
 - DBeaver==23.3.2
 - sqlite==3.41.2
 - streamlit==1.31.1
-- streamlit-authenticator
+
 
 
 ### 📁 Folder structure

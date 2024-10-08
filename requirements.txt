@@ -6,3 +6,9 @@ scipy
 nptdms
 notion
 notion-client
+nptdms==1.7.1
+streamlit-authenticator
+gdown
+PyDrive 
+oauth2client
+google-auth
