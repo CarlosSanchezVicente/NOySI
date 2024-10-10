@@ -25,13 +25,13 @@ from modules import read_directory as dir
 
 # READ VARIABLE STREAMLIT CLOUD (TOML)
 NOTION_TOKEN = st.secrets["tokens"]["NOTION_TOKEN"]
-MATERIALES_DB_ID = st.secrets["tokens"]["MATERIALES_DB_ID "]
-DISOLUCIONES_DB_ID = st.secrets["tokens"]["DISOLUCIONES_DB_ID "]
-SENSORES_DB_ID = st.secrets["tokens"]["SENSORES_DB_ID "]
-LED_DB_ID = st.secrets["tokens"]["LED_DB_ID "]
-GASES_DB_ID = st.secrets["tokens"]["GASES_DB_ID "]
-MEDIDAS_DB_ID = st.secrets["tokens"]["MEDIDAS_DB_ID "]
-path_db = st.secrets["paths"]["path_db "]
+MATERIALES_DB_ID = st.secrets["tokens"]["MATERIALES_DB_ID"]
+DISOLUCIONES_DB_ID = st.secrets["tokens"]["DISOLUCIONES_DB_ID"]
+SENSORES_DB_ID = st.secrets["tokens"]["SENSORES_DB_ID"]
+LED_DB_ID = st.secrets["tokens"]["LED_DB_ID"]
+GASES_DB_ID = st.secrets["tokens"]["GASES_DB_ID"]
+MEDIDAS_DB_ID = st.secrets["tokens"]["MEDIDAS_DB_ID"]
+path_db = st.secrets["paths"]["path_db"]
 
 
 
