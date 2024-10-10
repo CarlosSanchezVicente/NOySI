@@ -144,7 +144,8 @@ def main():
 
     st.text('hola, qué tal? Cómo estás?')
     st.text(st.secrets["tokens2"]["TOKEN_TEST"])
-    #st.text(st.secrets["tokens2"]["TOKEN_TEST_2"])
+    st.text('Aquí empieza el test')
+    st.text(st.secrets["tokens2"])
     st.text(st.secrets["drive"]["drive_secret"])  
 
     # Inicializate 'authentication_status' variable
