@@ -1,29 +1,15 @@
-from __future__ import print_function
-import os
-import io
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+# IMPORTS
 import streamlit as st
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+import sqlite3
+import io
 
-# Cargar las credenciales
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
-CREDS = None
-creds = None
-# Cargar el archivo de credenciales
-creds = service_account.Credentials.from_service_account_file('credentials.json', scopes=SCOPES)
+# READ VARIABLE
+DRIVE_TOKEN = st.secrets["tokens"]["ID_DRIVE"]
 
-# Conectar con la API de Google Drive
-service = build('drive', 'v3', credentials=creds)
 
-# Listar archivos
-results = service.files().list(
-    pageSize=10, fields="nextPageToken, files(id, name)").execute()
-items = results.get('files', [])
-
-if not items:
-    print('No files found.')
-else:
-    print('Files:')
-    for item in items:
-        print(f"{item['name']} ({item['id']})")
+# Autenticación con Google Drive
+gauth = GoogleAuth()
+gauth.LocalWebserverAuth()  # Autentica e inicia un servidor web local para completar el flujo OAuth
+drive = GoogleDrive(gauth)

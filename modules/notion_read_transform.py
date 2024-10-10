@@ -23,29 +23,24 @@ from modules import read_directory as dir
 #             https://www.python-engineer.com/posts/notion-api-python/
 
 
+# READ VARIABLE STREAMLIT CLOUD (TOML)
+NOTION_TOKEN = st.secrets["tokens"]["NOTION_TOKEN "]
+MATERIALES_DB_ID = st.secrets["tokens"]["MATERIALES_DB_ID "]
+DISOLUCIONES_DB_ID = st.secrets["tokens"]["DISOLUCIONES_DB_ID "]
+SENSORES_DB_ID = st.secrets["tokens"]["SENSORES_DB_ID "]
+LED_DB_ID = st.secrets["tokens"]["LED_DB_ID "]
+GASES_DB_ID = st.secrets["tokens"]["GASES_DB_ID "]
+MEDIDAS_DB_ID = st.secrets["tokens"]["MEDIDAS_DB_ID "]
+path_db = st.secrets["paths"]["path_db "]
+
 
 # DEFINITIONS
-#config = dotenv_values('./_wip_/.env')
-#config = dotenv_values('.env')
-#config = dotenv_values(os.path.join('..', '.env'))
-#NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
-#MATERIALES_DB_ID = config.get('MATERIALES_DB_ID')   # MATERIALES_DB_ID
-#DISOLUCIONES_DB_ID = config.get('DISOLUCIONES_DB_ID')   # DISOLUCIONES_DB_ID
-#SENSORES_DB_ID = config.get('SENSORES_DB_ID')   # SENSORES_DB_ID
-#LED_DB_ID = config.get('LED_DB_ID')   # LED_DB_ID
-#GASES_DB_ID = config.get('GASES_DB_ID')   # GASES_DB_ID
-#MEDIDAS_DB_ID = config.get('MEDIDAS_DB_ID')   # MEDIDAS_DB_ID
-#path_db = config.get('path_db')
-
-# DEFINITIONS
-#ID_list = [MATERIALES_DB_ID, DISOLUCIONES_DB_ID, SENSORES_DB_ID, LED_DB_ID, GASES_DB_ID, MEDIDAS_DB_ID]
-
-#headers = {
-#    'Authorization': 'Bearer ' + NOTION_TOKEN,
-#    'Content-Type': 'application/json',
-#    'Notion-Version': '2022-06-28'
-#}
-
+ID_list = {'MATERIALES_DB':MATERIALES_DB_ID, 
+           'DISOLUCIONES_DB':DISOLUCIONES_DB_ID, 
+           'SENSORES_DB':SENSORES_DB_ID, 
+           'LED_DB':LED_DB_ID, 
+           'GASES_DB':GASES_DB_ID, 
+           'MEDIDAS_DB':MEDIDAS_DB_ID}
 ID_dict = {'MATERIALES_DB':{'db_name': 'materials',
     
                             'DB_new_order':  ['index','id', 'Título', 'Etiquetas', 'parent', 'url', 'Realizado', 
@@ -204,7 +199,11 @@ ID_dict = {'MATERIALES_DB':{'db_name': 'materials',
                                     'Gases': 'id_gases'}
                          }
           }
-
+headers = {
+        'Authorization': 'Bearer ' + NOTION_TOKEN,
+        'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28'
+    }
 
 
 # AUXILIARY FUNCTIONS - EXTRACT DATA
@@ -588,28 +587,19 @@ def obtain_data_notion(process_type, date, pages_number=100):   #config
     Returns:
         pages (json): data from Notion
     """
-    # Definition
-    #NOTION_TOKEN = config.get('NOTION_TOKEN')   # NOTION_TOKEN
-    headers = {
-        'Authorization': 'Bearer ' + st.secrets["NOTION_TOKEN "],   #NOTION_TOKEN,
-        'Content-Type': 'application/json',
-        'Notion-Version': '2022-06-28'
-    }
-    #path_db = config.get('path_db')
-    ID_list = ['MATERIALES_DB', 'DISOLUCIONES_DB', 'SENSORES_DB', 'LED_DB', 'GASES_DB', 'MEDIDAS_DB']
     st.markdown('#### New Notion records:')
 
     # Obtain and store data from each notion table
-    for db_name in ID_list:
+    for db_name, DATABASE_ID in ID_list.items():
         print(db_name)
         
         # Create the name to store the data
         current_date = datetime.now().strftime("%Y-%m-%d")
         file_name = f"{db_name}_{current_date}"
 
-        # Create database ID
-        id_name = f'{db_name}_ID'
-        DATABASE_ID = config[id_name]
+        # Read database ID
+        #id_name = f'{db_name}_ID'
+        #DATABASE_ID = ID_list[id_name]   #config
         #exec(f'DATABASE_ID = config["{id_name}"]')
 
         # Obtain and store the data from Notion database
