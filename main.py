@@ -148,6 +148,7 @@ def main():
     
     
     st.text(st.secrets["tokens2"]["TOKEN_TEST"])
+    st.text(st.secrets["tokens2"]["TOKEN_TEST_2"])
     st.text(st.secrets["drive"]["drive_secret"])  
     # User authentication
     if not check_password():
