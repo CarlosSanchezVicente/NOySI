@@ -143,8 +143,8 @@ def main():
     st.logo('./img/NoySI.png', size="medium")
 
     st.text('hola, qué tal?')
-    #st.text(st.secrets["tokens2"]["TOKEN_TEST"])
-    st.text(st.secrets["tokens2"]["TOKEN_TEST_2"])
+    st.text(st.secrets["tokens2"]["TOKEN_TEST"])
+    #st.text(st.secrets["tokens2"]["TOKEN_TEST_2"])
     st.text(st.secrets["drive"]["drive_secret"])  
 
     # Inicializate 'authentication_status' variable
