@@ -142,7 +142,7 @@ def main():
     add_logo()
     st.logo('./img/NoySI.png', size="medium")
 
-    st.text('hola, qué tal?')
+    st.text('hola, qué tal? Cómo estás?')
     st.text(st.secrets["tokens2"]["TOKEN_TEST"])
     #st.text(st.secrets["tokens2"]["TOKEN_TEST_2"])
     st.text(st.secrets["drive"]["drive_secret"])  
