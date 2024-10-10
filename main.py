@@ -148,7 +148,6 @@ def main():
     
     
     st.text(st.secrets["drive"])
-    
     # User authentication
     if not check_password():
         st.stop()
