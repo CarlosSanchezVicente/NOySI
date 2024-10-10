@@ -147,7 +147,8 @@ def main():
         st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
     
     
-    st.text(st.secrets["drive"])
+    st.text(st.secrets["tokens2"]["TOKEN_TEST"])
+    st.text(st.secrets["drive"]["drive_secret"])  
     # User authentication
     if not check_password():
         st.stop()
