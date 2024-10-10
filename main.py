@@ -142,14 +142,15 @@ def main():
     add_logo()
     st.logo('./img/NoySI.png', size="medium")
 
-    # Inicializate 'authentication_status' variable
-    if 'authentication_status' not in st.session_state:
-        st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
-    
     st.text('hola, qué tal?')
     st.text(st.secrets["tokens2"]["TOKEN_TEST"])
     st.text(st.secrets["tokens2"]["TOKEN_TEST_2"])
     st.text(st.secrets["drive"]["drive_secret"])  
+
+    # Inicializate 'authentication_status' variable
+    if 'authentication_status' not in st.session_state:
+        st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
+    
     # User authentication
     if not check_password():
         st.stop()
