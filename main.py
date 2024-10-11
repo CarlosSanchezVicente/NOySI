@@ -180,8 +180,8 @@ def main():
     if not check_password():
         st.stop()
 
-    st.text('Carga_correcta_3')
-    dict_drive = st.secrets["drive"]
+    st.text('Carga_correcta_4')
+    dict_drive = dict(st.secrets["drive"])
     st.text(type(dict_drive))
     st.text(dict_drive.keys())
 
