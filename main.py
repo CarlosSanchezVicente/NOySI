@@ -135,7 +135,8 @@ def authenticate_google_drive():
         "redirect_uris": st.secrets["drive"]["redirect_uris"],
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
-        "revoke_uri": "https://oauth2.googleapis.com/revoke"
+        "revoke_uri": "https://oauth2.googleapis.com/revoke",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs"
     }
 
     # Iniciar autenticación mediante el servidor web local
@@ -187,7 +188,7 @@ def main():
     if not check_password():
         st.stop()
 
-    st.text('Carga_correcta')
+    st.text('Carga_correcta_2')
 
     # Drive authentication
     authenticate_google_drive()
