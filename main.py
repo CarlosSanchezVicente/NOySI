@@ -128,12 +128,14 @@ def authenticate_google_drive():
     gauth = GoogleAuth()
 
     # Configuración de credenciales usando st.secrets
+    gauth.settings['client_config_backend'] = 'settings'
     gauth.settings['client_config'] = {
         "client_id": st.secrets["drive"]["CLIENT_ID"],
         "client_secret": st.secrets["drive"]["CLIENT_SECRET"],
-        "redirect_uris": ["http://localhost:8501"],
+        "redirect_uris": st.secrets["drive"]["REDIRECT_URIS"],
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token"
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "revoke_uri": "https://oauth2.googleapis.com/revoke"
     }
 
     # Iniciar autenticación mediante el servidor web local
