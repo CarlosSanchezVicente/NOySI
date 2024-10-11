@@ -4,6 +4,9 @@ import streamlit.components.v1 as components
 import pandas as pd
 import hmac
 import os
+import streamlit as st
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 # IMPORT FUNCTIONS FROM MODULES
 from modules import notion_read_transform as notion
@@ -121,6 +124,38 @@ def check_password():
         st.error("😕 User not known or password incorrect")
     return False
 
+def authenticate_google_drive():
+    gauth = GoogleAuth()
+
+    # Configuración de credenciales usando st.secrets
+    gauth.settings['client_config'] = {
+        "client_id": st.secrets["drive"]["CLIENT_ID"],
+        "client_secret": st.secrets["drive"]["CLIENT_SECRET"],
+        "redirect_uris": ["http://localhost:8501"],
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token"
+    }
+
+    # Iniciar autenticación mediante el servidor web local
+    gauth.LocalWebserverAuth()  # Autenticar con Google
+
+    # Crear una instancia de Google Drive
+    drive = GoogleDrive(gauth)
+    
+    # Probar si la conexión es exitosa listando los archivos en la raíz de Google Drive
+    try:
+        file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+        if file_list:
+            st.success("Conexión con Google Drive realizada correctamente.")
+            st.write("Archivos en tu Google Drive:")
+            for file in file_list:
+                st.write(f" - {file['title']}")
+        else:
+            st.info("La conexión es exitosa, pero no se encontraron archivos en Google Drive.")
+    except Exception as e:
+        st.error("Error al conectar con Google Drive.")
+        st.error(e)
+
 def obtain_page_names():
     # Ruta a la carpeta 'pages'
     pages_folder = os.path.join(os.getcwd(), 'pages')
@@ -142,12 +177,6 @@ def main():
     add_logo()
     st.logo('./img/NoySI.png', size="medium")
 
-    st.text('hola, qué tal? Cómo estás?')
-    st.text(st.secrets["tokens2"]["TOKEN_TEST"])
-    st.text('Aquí empieza el test')
-    st.text(st.secrets["tokens2"])
-    st.text(st.secrets["drive"]["drive_secret"])  
-
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
         st.session_state['authentication_status'] = False  # O False si prefieres que inicie en no autenticado
@@ -155,6 +184,9 @@ def main():
     # User authentication
     if not check_password():
         st.stop()
+
+    # Drive authentication
+    authenticate_google_drive()
 
     # Add another elements
     st.sidebar.success('Select a page')
