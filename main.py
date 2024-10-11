@@ -187,6 +187,8 @@ def main():
     if not check_password():
         st.stop()
 
+    st.text('Carga_correcta')
+
     # Drive authentication
     authenticate_google_drive()
 
