@@ -162,19 +162,18 @@ def authenticate_google_drive_v2():
     client_id = st.secrets["drive"]["client_id"]
     token = st.secrets["drive"]["client_secret"]
 
-    if st.button("Authenticate"):
-        try:
-            idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
-            st.text('idinfo:')
-            st.text(idinfo)
-            
-            if idinfo['aud'] != client_id:
-                raise ValueError("Invalid client ID")
-            st.success(f"Authentication successful: {idinfo['name']}")
-            # Continue with the rest of your app logic here
-        except ValueError as e:
-            st.error("Authentication failed")
-            st.error(e)
+    try:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
+        st.text('idinfo:')
+        st.text(idinfo)
+
+        if idinfo['aud'] != client_id:
+            raise ValueError("Invalid client ID")
+        st.success(f"Authentication successful: {idinfo['name']}")
+        # Continue with the rest of your app logic here
+    except ValueError as e:
+        st.error("Authentication failed")
+        st.error(e)
 
 def obtain_page_names():
     # Ruta a la carpeta 'pages'
