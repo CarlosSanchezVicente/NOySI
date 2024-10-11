@@ -132,7 +132,7 @@ def authenticate_google_drive():
     gauth.settings['client_config'] = {
         "client_id": st.secrets["drive"]["CLIENT_ID"],
         "client_secret": st.secrets["drive"]["CLIENT_SECRET"],
-        "redirect_uris": st.secrets["drive"]["REDIRECT_URIS"],
+        "redirect_uris": st.secrets["drive"]["redirect_uris"],
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "revoke_uri": "https://oauth2.googleapis.com/revoke"
