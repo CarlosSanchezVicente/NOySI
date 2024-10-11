@@ -7,6 +7,7 @@ import os
 import streamlit as st
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+import json
 
 # IMPORT FUNCTIONS FROM MODULES
 from modules import notion_read_transform as notion
@@ -182,7 +183,8 @@ def main():
 
     st.text('Carga_correcta_4')
     dict_drive = dict(st.secrets["drive"])
-    st.text(type(dict_drive))
+    secrets_json = json.dumps(dict_drive)
+    st.text(type(secrets_json))
     st.text(dict_drive.keys())
 
     # Drive authentication
