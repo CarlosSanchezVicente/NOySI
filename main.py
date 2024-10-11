@@ -14,6 +14,7 @@ from modules import notion_read_transform as notion
 from modules import electrical_read_transform as elecr
 from modules import electrical_processing as elecp
 from modules import optical_read_transform as op
+from modules import drive_conn as dconn
 
 
 # DEFINITION
@@ -181,14 +182,14 @@ def main():
     if not check_password():
         st.stop()
 
-    st.text('Carga_correcta_4')
+    st.text('Carga_correcta_5')
     dict_drive = dict(st.secrets["drive"])
     secrets_json = json.dumps(dict_drive)
     st.text(type(secrets_json))
     st.text(dict_drive.keys())
 
     # Drive authentication
-    authenticate_google_drive()
+    dconn.drive_conn()
 
     # Add another elements
     st.sidebar.success('Select a page')
