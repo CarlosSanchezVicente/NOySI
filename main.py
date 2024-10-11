@@ -165,6 +165,9 @@ def authenticate_google_drive_v2():
     if st.button("Authenticate"):
         try:
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
+            st.text('idinfo:')
+            st.text(idinfo)
+            
             if idinfo['aud'] != client_id:
                 raise ValueError("Invalid client ID")
             st.success(f"Authentication successful: {idinfo['name']}")
