@@ -129,15 +129,7 @@ def authenticate_google_drive():
 
     # Configuración de credenciales usando st.secrets
     gauth.settings['client_config_backend'] = 'settings'
-    gauth.settings['client_config'] = {
-        "client_id": st.secrets["drive"]["CLIENT_ID"],
-        "client_secret": st.secrets["drive"]["CLIENT_SECRET"],
-        "redirect_uris": st.secrets["drive"]["redirect_uris"],
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "revoke_uri": "https://oauth2.googleapis.com/revoke",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs"
-    }
+    gauth.settings['client_config'] = st.secrets["drive"]
 
     # Iniciar autenticación mediante el servidor web local
     gauth.LocalWebserverAuth()  # Autenticar con Google
@@ -188,7 +180,10 @@ def main():
     if not check_password():
         st.stop()
 
-    st.text('Carga_correcta_2')
+    st.text('Carga_correcta_3')
+    dict_drive = st.secrets["drive"]
+    st.text(type(dict_drive))
+    st.text(dict_drive.keys())
 
     # Drive authentication
     authenticate_google_drive()
