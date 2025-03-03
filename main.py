@@ -204,30 +204,6 @@ def main():
     if not check_password():
         st.stop()
 
-    st.text('Carga_correcta_5')
-    dict_drive = dict(st.secrets["drive"])
-    secrets_json = json.dumps(dict_drive)
-    st.text(type(secrets_json))
-    st.text(dict_drive.keys())
-
-    # Drive authentication
-    st.subheader("Google Authentication")
-    client_id = st.secrets["drive"]["client_id"]
-    token = st.secrets["drive"]["client_secret"]
-
-    try:
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
-        st.text('idinfo:')
-        st.text(idinfo)
-
-        if idinfo['aud'] != client_id:
-            raise ValueError("Invalid client ID")
-        st.success(f"Authentication successful: {idinfo['name']}")
-        # Continue with the rest of your app logic here
-    except ValueError as e:
-        st.error("Authentication failed")
-        st.error(e)
-
     # Add another elements
     st.sidebar.success('Select a page')
     st.warning('Check that all measurements have been completed before proceeding. \n \
