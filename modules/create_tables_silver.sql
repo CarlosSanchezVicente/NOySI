@@ -169,7 +169,7 @@ CREATE TABLE measurements_hist (
 
 
 -- CREATE TABLE 'electrical_measurements'
-CREATE TABLE data_methane_line (
+CREATE TABLE data_line (
 	ID INT PRIMARY KEY,
 	file_title VARCHAR ( 50 ) NOT NULL,
 	load_ts	TIMESTAMP NOT NULL,

@@ -104,6 +104,9 @@ FROM data_methane_pos
 WHERE file_title = ?;
  """
 
+# READ VARIABLE STREAMLIT CLOUD (TOML)
+path_db = st.secrets["paths"]["path_db"]
+
 # CONFIGURATION PAGE
 #st.title('Data analysis and plot the experiment')
 st.set_page_config(
@@ -295,9 +298,9 @@ def select_concentration_to_plot(df, concentration, wavelength_numbers_df):
 
 # CONNECTION TO DATABASE
 # Create a connection to a file called 'LabSilver.db'
-con = duckdb.connect("./data/Silver/LabSilver.db")
+con = duckdb.connect(path_db)
 # Create a connection to a file called 'gold_lab.db'
-conn = duckdb.connect("./data/Gold/LabGold.db")
+#conn = duckdb.connect("./data/Gold/LabGold.db")
 # Basic Query 
 data_experiment_df = con.execute(query_basic).df()
 
