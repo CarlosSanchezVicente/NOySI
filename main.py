@@ -20,7 +20,7 @@ from modules import optical_read_transform as op
 from modules import drive_conn as dconn
 
 
-# DEFINITION-------------------
+# DEFINITION
 # General
 main_page = "main.py"
 #config = dotenv_values('.env')
