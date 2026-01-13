@@ -158,6 +158,7 @@ data/
 data/Bronze/
 data/Silver/
 data/Gold/
+.streamlit/
 
 # Temp folders
 .tmp.driveupload/
