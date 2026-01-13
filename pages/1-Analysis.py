@@ -3,6 +3,8 @@ import pandas as pd
 import duckdb
 import streamlit as st 
 import altair as alt
+import platform 
+from pathlib import Path
 import datetime
 import re
 
@@ -120,6 +122,40 @@ st.sidebar.markdown("### Select the parameters:")
 
 
 # AUXILIARY FUNCTIONS
+
+def resolve_db_path() -> Path:
+    # Leer ruta desde secretos (paths -> path_db)
+    secret_path = st.secrets.get("paths", {}).get("path_db")
+
+    # Si estamos en Windows (tu PC), usa tal cual lo que venga en secrets
+    if platform.system() == "Windows":
+        if secret_path:
+            return Path(secret_path)
+        # Por si falta en secrets, usa un valor por defecto local
+        return Path(r"C:\Users\carlo\NOySI\data\Silver\LabSilver.db")
+
+    # Si NO estamos en Windows (Cloud/Linux):
+    # Si el secret es una ruta de Windows (C:\ o C:/), no sirve en Cloud → fallback
+    if secret_path and (secret_path.startswith("C:\\") or secret_path.startswith("C:/")):
+        # Intenta archivo dentro del repo (solo lectura)
+        repo_db = Path(__file__).resolve().parents[1] / "data" / "Silver" / "LabSilver.db"
+        if repo_db.exists():
+            return repo_db
+        # Si no existe, usa /tmp (podrías crear o copiar ahí si lo necesitas)
+        return Path("/tmp/LabSilver.db")
+
+    # Si el secret ya es válido para Linux (por ejemplo "/tmp/LabSilver.db" o ruta del repo)
+    if secret_path:
+        return Path(secret_path)
+
+    # Sin secret: intenta repo; si no existe, /tmp
+    repo_db = Path(__file__).resolve().parents[1] / "data" / "Silver" / "LabSilver.db"
+    return repo_db if repo_db.exists() else Path("/tmp/LabSilver.db")
+
+db_path = resolve_db_path()
+
+
+
 def filter_df(df, column_result, column_filter, var_req, start_time_req, end_time_req):
 
     # Filter u
