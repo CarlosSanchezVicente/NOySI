@@ -111,7 +111,7 @@ path_db = st.secrets["paths"]["path_db"]
 #print("Este es el path de la base de datos: ", path_db)
 
 # Inicializar la conexión con BBDD
-conn = duckdb.connect(database=':memory:')
+#conn = duckdb.connect(database=':memory:')
 
 # CONFIGURATION PAGE
 #st.title('Data analysis and plot the experiment')
@@ -340,7 +340,7 @@ def select_concentration_to_plot(df, concentration, wavelength_numbers_df):
 # Create a connection to a file called 'LabSilver.db'
 con = duckdb.connect(path_db)
 # Create a connection to a file called 'gold_lab.db'
-#conn = duckdb.connect("./data/Gold/LabGold.db")
+conn = duckdb.connect("./data/Gold/LabGold.db")
 # Basic Query 
 data_experiment_df = con.execute(query_basic).df()
 
