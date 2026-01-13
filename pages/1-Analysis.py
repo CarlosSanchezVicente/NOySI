@@ -108,7 +108,10 @@ WHERE file_title = ?;
 
 # READ VARIABLE STREAMLIT CLOUD (TOML)
 path_db = st.secrets["paths"]["path_db"]
-print("Este es el path de la base de datos: ", path_db)
+#print("Este es el path de la base de datos: ", path_db)
+
+# Inicializar la conexión con BBDD
+conn = duckdb.connect(database=':memory:')
 
 # CONFIGURATION PAGE
 #st.title('Data analysis and plot the experiment')
