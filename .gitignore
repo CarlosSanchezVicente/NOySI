@@ -158,7 +158,9 @@ data/
 data/Bronze/
 data/Silver/
 data/Gold/
-.streamlit/
+
+# Streamlit
+.streamlit/secrets.toml
 
 # Temp folders
 .tmp.driveupload/
