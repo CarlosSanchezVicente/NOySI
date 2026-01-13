@@ -1,7 +1,7 @@
 # IMPORTS
 import pandas as pd
 import requests
-from dotenv import dotenv_values
+from dotenv_values import dotenv_values
 from datetime import datetime
 import json
 import notion_client
