@@ -5,8 +5,8 @@ import pandas as pd
 import hmac
 import os
 import streamlit as st
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
 import json
 
 from google.oauth2 import id_token
