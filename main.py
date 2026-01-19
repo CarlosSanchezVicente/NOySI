@@ -22,7 +22,7 @@ from modules import notion_read_transform as notion
 from modules import electrical_read_transform as elecr
 from modules import electrical_processing as elecp
 from modules import optical_read_transform as op
-from modules import drive_conn as dconn
+from modules import drive_conn as drive
 
 
 # DEFINITION
@@ -134,52 +134,6 @@ def check_password():
         st.error("😕 User not known or password incorrect")
     return False
 
-def authenticate_google_drive():
-    gauth = GoogleAuth()
-
-    # Configuración de credenciales usando st.secrets
-    gauth.settings['client_config_backend'] = 'settings'
-    gauth.settings['client_config'] = st.secrets["drive"]
-
-    # Iniciar autenticación mediante el servidor web local
-    gauth.LocalWebserverAuth()  # Autenticar con Google
-
-    # Crear una instancia de Google Drive
-    drive = GoogleDrive(gauth)
-    
-    # Probar si la conexión es exitosa listando los archivos en la raíz de Google Drive
-    try:
-        file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
-        if file_list:
-            st.success("Conexión con Google Drive realizada correctamente.")
-            st.write("Archivos en tu Google Drive:")
-            for file in file_list:
-                st.write(f" - {file['title']}")
-        else:
-            st.info("La conexión es exitosa, pero no se encontraron archivos en Google Drive.")
-    except Exception as e:
-        st.error("Error al conectar con Google Drive.")
-        st.error(e)
-
-def authenticate_google_drive_v2():
-    # Google Authentication
-    st.subheader("Google Authentication")
-    client_id = st.secrets["drive"]["client_id"]
-    token = st.secrets["drive"]["client_secret"]
-
-    try:
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
-        st.text('idinfo:')
-        st.text(idinfo)
-
-        if idinfo['aud'] != client_id:
-            raise ValueError("Invalid client ID")
-        st.success(f"Authentication successful: {idinfo['name']}")
-        # Continue with the rest of your app logic here
-    except ValueError as e:
-        st.error("Authentication failed")
-        st.error(e)
-
 def obtain_page_names():
     # Ruta a la carpeta 'pages'
     pages_folder = os.path.join(os.getcwd(), 'pages')
@@ -233,6 +187,8 @@ def main():
 
         # OPTICAL MEASUREMENT
         #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
+
+        drive.run_ingestion()
         pass
         
 

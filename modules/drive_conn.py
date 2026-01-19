@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import tempfile
 from typing import List, Tuple, Optional
+from nptdms import TdmsFile
 import streamlit as st
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
@@ -14,7 +15,24 @@ from utils_drive import (
     get_drive, list_folder, download_file_bytes, upload_bytes_to_folder
 )
 
+# FUNCIONAMIENTO DRIVE CONN + INGESTA
+"""
+run_ingestion()
+│
+├── list_folder()             ← SOLO lista metadatos
+│
+├── es_tdms_time_relevante()  ← FILTRA
+│
+├── process_one_tdms_file()   ← AQUÍ se leen los archivos
+│       ├── download_file_bytes()
+│       ├── read_tdms_to_df()  ✅ AQUÍ se hace la lectura TDMS REAL
+│       ├── clean_and_extract()
+│       └── upload_bytes_to_folder()
+│
+└── actualización del manifest
+"""
 
+# VARIABLES
 # Usa el scope mínimo necesario. Para lectura y escritura, mejor drive.file o drive.
 # - readonly: solo lectura
 # - drive.file: leer y escribir archivos creados/abiertos por la app
@@ -25,96 +43,10 @@ FULL_SCOPE = "https://www.googleapis.com/auth/drive"
 
 # Elige el alcance que necesitas:
 SCOPES = [FULL_SCOPE]  # o [READ_SCOPE] si solo vas a leer
-
-
-@st.cache_resource(show_spinner=False)
-
-def get_drive() -> GoogleDrive:
-    """Autenticación con Cuenta de Servicio. Lee JSON desde st.secrets."""
-    gauth = GoogleAuth()
-    gauth.settings["client_config_backend"] = "service"
-    gauth.settings["service_config"] = {
-        "client_json": json.loads(st.secrets["drive"]["service_account_json"]),
-        "scope": SCOPES,
-    }
-    gauth.ServiceAuth()
-    return GoogleDrive(gauth)
-
-def list_folder(drive: GoogleDrive, folder_id: str):
-    """Retorna la lista de items (diccionarios v2) dentro de la carpeta."""
-    q = f"'{folder_id}' in parents and trashed=false"
-    # Puedes añadir orderBy si quieres: {"q": q, "orderBy": "createdDate desc"}
-    return drive.ListFile({"q": q}).GetList()
-
-def list_folder_simple(drive: GoogleDrive, folder_id: str) -> List[Tuple[str, str, str]]:
-    """Lista simplificada: (title, id, mimeType)."""
-    items = list_folder(drive, folder_id)
-    return [(f.get("title"), f.get("id"), f.get("mimeType")) for f in items]
-
-def download_file_bytes(drive: GoogleDrive, file_id: str) -> bytes:
-    """Descarga un archivo por ID y devuelve bytes."""
-    f = drive.CreateFile({"id": file_id})
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        tmp_path = tmp.name
-    try:
-        f.GetContentFile(tmp_path)
-        with open(tmp_path, "rb") as fh:
-            return fh.read()
-    finally:
-        try:
-            os.remove(tmp_path)
-        except Exception:
-            pass
-
-def upload_bytes_to_folder(
-    drive: GoogleDrive,
-    data: bytes,
-    filename: str,
-    folder_id: Optional[str] = None,
-    mime_type: Optional[str] = None,
-) -> str:
-    """Sube bytes a una carpeta de Drive. Devuelve el file_id."""
-    meta = {"title": filename}
-    if folder_id:
-        meta["parents"] = [{"id": folder_id}]
-    if mime_type:
-        meta["mimeType"] = mime_type
-
-    f = drive.CreateFile(meta)
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        tmp_path = tmp.name
-        tmp.write(data)
-    try:
-        f.SetContentFile(tmp_path)
-        f.Upload()
-        return f["id"]
-    finally:
-        try:
-            os.remove(tmp_path)
-        except Exception:
-            pass
-
-def create_folder(drive: GoogleDrive, name: str, parent_folder_id: Optional[str] = None) -> str:
-    """Crea una carpeta y devuelve su ID (Drive v2)."""
-    meta = {"title": name, "mimeType": "application/vnd.google-apps.folder"}
-    if parent_folder_id:
-        meta["parents"] = [{"id": parent_folder_id}]
-    folder = drive.CreateFile(meta)
-    folder.Upload()
-    return folder["id"]
-
-def move_file_to_folder(drive: GoogleDrive, file_id: str, new_parent_id: str):
-    """Mueve un archivo a otra carpeta."""
-    f = drive.CreateFile({"id": file_id})
-    f.FetchMetadata(fields="parents")
-    f["parents"] = [{"id": new_parent_id}]
-    f.Upload()
-
-
-
-
 BRONZE_MANIFEST_NAME = "manifest_ingesta.csv"
 
+
+# FUNCIONES MANIFEST
 def ensure_manifest(drive, bronze_folder_id):
     """Devuelve (df_manifest, manifest_file_id). Crea uno vacío si no existe."""
     items = list_folder(drive, bronze_folder_id)
@@ -160,39 +92,51 @@ def clean_and_extract(df_raw: pd.DataFrame) -> pd.DataFrame:
     df = df_raw.dropna(how="all").drop_duplicates()
     return df
 
-def process_one_file(drive, file_meta, bronze_folder_id):
-    """
-    Descarga un archivo, lo limpia y lo sube como Parquet a bronze.
-    Devuelve (bronze_file_id, bronze_title).
-    """
+def es_tdms_time_relevante(title: str) -> bool:
+    if not title:
+        return False
+    t = title.lower()
+    return t.endswith(".tdms") and "time" in t and not t.endswith(".tdms_index")
+
+def process_one_tdms_file(drive, file_meta, bronze_folder_id):
     file_id = file_meta["id"]
-    title = file_meta.get("title")  # v2
-    mime = file_meta.get("mimeType")
+    title = file_meta["title"]
     created = file_meta.get("createdDate")
     md5 = file_meta.get("md5Checksum")
 
     raw_bytes = download_file_bytes(drive, file_id)
 
-    # Detectar y cargar (adapta a tus formatos reales)
-    # Asumimos CSV como ejemplo:
-    df_raw = pd.read_csv(io.BytesIO(raw_bytes))  # usa sep=";" si aplica
+    df_raw = read_tdms_to_df(raw_bytes)
     df_clean = clean_and_extract(df_raw)
 
-    # Serializar a Parquet (bytes)
-    parquet_bytes = io.BytesIO()
-    df_clean.to_parquet(parquet_bytes, index=False)  # requiere pyarrow o fastparquet instalado
-    parquet_bytes.seek(0)
+    buf = io.BytesIO()
+    df_clean.to_parquet(buf, index=False)
+    buf.seek(0)
 
-    # Nombre parquet de salida
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     bronze_title = f"{title}_clean_{ts}.parquet"
 
     bronze_file_id = upload_bytes_to_folder(
-        drive, parquet_bytes.getvalue(), bronze_title, bronze_folder_id,
+        drive,
+        buf.getvalue(),
+        bronze_title,
+        bronze_folder_id,
         mime_type="application/octet-stream"
     )
-    return bronze_file_id, bronze_title, created, md5, title
 
+    return {
+        "file_id": file_id,
+        "raw_title": title,
+        "createdDate": created,
+        "md5Checksum": md5,
+        "bronze_file_id": bronze_file_id,
+        "bronze_title": bronze_title,
+        "processed_at_utc": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# FUNCIÓN PRINCIPAL
+"""
 def run_ingestion():
     st.header("Ingesta a Bronze")
     drive = get_drive()
@@ -251,3 +195,52 @@ def run_ingestion():
             st.success("Manifest actualizado.")
         else:
             st.info("No había nada que procesar.")
+"""
+            
+@st.cache_resource(show_spinner=False)
+
+def get_drive() -> GoogleDrive:
+    gauth = GoogleAuth()
+    gauth.settings["client_config_backend"] = "service"
+    gauth.settings["service_config"] = {
+        "client_json": json.loads(st.secrets["drive"]["service_account_json"]),
+        "scope": SCOPES,
+    }
+    gauth.ServiceAuth()
+    return GoogleDrive(gauth)
+
+def list_folder(drive: GoogleDrive, folder_id: str):
+    q = f"'{folder_id}' in parents and trashed=false"
+    return drive.ListFile({"q": q}).GetList()
+
+def list_metano():
+    drive = get_drive()
+    metano_id = st.secrets["folders"]["metano"]
+
+    items = list_folder(drive, metano_id)
+
+    st.write(f"Archivos en metano_line: {len(items)}")
+    for f in items:
+        st.write({
+            "title": f.get("title"),
+            "id": f.get("id"),
+            "mimeType": f.get("mimeType"),
+            "createdDate": f.get("createdDate"),
+            "modifiedDate": f.get("modifiedDate"),
+        })
+
+def run_ingestion():
+    drive = get_drive()
+    metano_id = st.secrets["folders"]["metano"]
+
+    items = list_folder(drive, metano_id)
+
+    tdms_relevantes = [
+        f for f in items
+        if es_tdms_time_relevante(f.get("title", ""))
+    ]
+
+    st.write(f"TDMS relevantes: {len(tdms_relevantes)}")
+    for f in tdms_relevantes:
+        st.write(f["title"])
+
