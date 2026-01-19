@@ -197,10 +197,10 @@ def run_ingestion():
 """
             
 @st.cache_resource(show_spinner=False)
-
-def list_folder(drive: GoogleDrive, folder_id: str):
-    q = f"'{folder_id}' in parents and trashed=false"
-    return drive.ListFile({"q": q}).GetList()
+def list_folder(_drive, folder_id: str):
+    query = f"'{folder_id}' in parents and trashed=false"
+    results = _drive.files().list(q=query, fields="files(id, name)").execute()
+    return results.get('files', [])
 
 def list_metano():
     drive = get_drive()
@@ -220,7 +220,8 @@ def list_metano():
 
 def run_ingestion():
     drive = get_drive()
-    metano_id = st.secrets["folders"]["metano"]
+    metano_id = st.secrets["folders"]["metano_line"]
+    
 
     items = list_folder(drive, metano_id)
 

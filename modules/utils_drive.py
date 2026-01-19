@@ -1,11 +1,13 @@
 # IMPORTS
+import io
 import os
 import tempfile
 import json
 from typing import Optional
 import streamlit as st
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 
 
 # VARIABLES
@@ -22,68 +24,44 @@ SCOPES = [FULL_SCOPE]  # o [READ_SCOPE] si solo vas a leer
 
 
 # FUNCIONES DRIVE
-def get_drive() -> GoogleDrive:
-    """Autenticación con Cuenta de Servicio. Lee JSON desde st.secrets."""
-
-    # 1. Cargamos el JSON de los secretos
-    service_account_info = json.loads(st.secrets["drive"]["service_account_json"])
-
-    # 2. Configuración de forma manual
-    settings = {
-        "client_config_backend": "settings",
-        "service_config": {
-            "client_json_dict": service_account_info,
-            "scope": SCOPES  # <--- Añadimos el scope aquí
-        }
-    }
-
-    # 3. PASAR LAS SETTINGS AQUÍ para evitar que busque el archivo settings.yaml
-    gauth = GoogleAuth(settings=settings)
-
-    # 4. Autenticamos
-    gauth.service_account_auth()
+def get_drive():
+    """Autenticación oficial de Google para Cuenta de Servicio."""
     
-    return GoogleDrive(gauth)
+    # 1. Cargamos el JSON desde los secretos
+    info = json.loads(st.secrets["drive"]["service_account_json"])
+    
+    # 2. Definimos los permisos (Scopes)
+    SCOPES = ['https://www.googleapis.com/auth/drive']
+    
+    # 3. Creamos las credenciales
+    creds = service_account.Credentials.from_service_account_info(
+        info, scopes=SCOPES
+    )
+    
+    # 4. Construimos el servicio de Drive (v3 es la versión actual)
+    service = build('drive', 'v3', credentials=creds)
+    
+    return service
 
-def download_file_bytes(drive: GoogleDrive, file_id: str) -> bytes:
+def download_file_bytes(service, file_id: str) -> bytes:
     """Descarga un archivo por ID y devuelve bytes."""
-    f = drive.CreateFile({"id": file_id})
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        tmp_path = tmp.name
-    try:
-        f.GetContentFile(tmp_path)
-        with open(tmp_path, "rb") as fh:
-            return fh.read()
-    finally:
-        try:
-            os.remove(tmp_path)
-        except Exception:
-            pass
+    request = service.files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+    return fh.getvalue()
 
-def upload_bytes_to_folder(
-    drive: GoogleDrive,
-    data: bytes,
-    filename: str,
-    folder_id: Optional[str] = None,
-    mime_type: Optional[str] = None,
-) -> str:
-    """Sube bytes a una carpeta de Drive. Devuelve el file_id."""
-    meta = {"title": filename}
-    if folder_id:
-        meta["parents"] = [{"id": folder_id}]
-    if mime_type:
-        meta["mimeType"] = mime_type
-
-    f = drive.CreateFile(meta)
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        tmp_path = tmp.name
-        tmp.write(data)
-    try:
-        f.SetContentFile(tmp_path)
-        f.Upload()
-        return f["id"]
-    finally:
-        try:
-            os.remove(tmp_path)
-        except Exception:
-            pass
+def upload_bytes_to_folder(service, folder_id, file_name, content_bytes):
+    file_metadata = {
+        'name': file_name,
+        'parents': [folder_id]
+    }
+    media = MediaFileUpload(
+        io.BytesIO(content_bytes), 
+        mimetype='application/octet-stream', 
+        resumable=True
+    )
+    file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    return file.get('id')
