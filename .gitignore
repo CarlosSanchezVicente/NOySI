@@ -161,6 +161,7 @@ data/Gold/
 
 # Streamlit
 .streamlit/secrets.toml
+credentials.json
 
 # Temp folders
 .tmp.driveupload/
