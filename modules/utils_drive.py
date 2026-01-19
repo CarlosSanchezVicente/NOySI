@@ -24,13 +24,25 @@ SCOPES = [FULL_SCOPE]  # o [READ_SCOPE] si solo vas a leer
 # FUNCIONES DRIVE
 def get_drive() -> GoogleDrive:
     """Autenticación con Cuenta de Servicio. Lee JSON desde st.secrets."""
-    gauth = GoogleAuth()
-    gauth.settings["client_config_backend"] = "service"
-    gauth.settings["service_config"] = {
-        "client_json": json.loads(st.secrets["drive"]["service_account_json"]),
-        "scope": SCOPES,
+
+    # 1. Cargamos el JSON de los secretos
+    service_account_info = json.loads(st.secrets["drive"]["service_account_json"])
+
+    # 2. Configuración de forma manual
+    settings = {
+        "client_config_backend": "settings",
+        "service_config": {
+            "client_json_dict": service_account_info,
+            "scope": SCOPES  # <--- Añadimos el scope aquí
+        }
     }
-    gauth.ServiceAuth()
+
+    # 3. PASAR LAS SETTINGS AQUÍ para evitar que busque el archivo settings.yaml
+    gauth = GoogleAuth(settings=settings)
+
+    # 4. Autenticamos
+    gauth.service_account_auth()
+    
     return GoogleDrive(gauth)
 
 def download_file_bytes(drive: GoogleDrive, file_id: str) -> bytes:

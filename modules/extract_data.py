@@ -11,7 +11,7 @@ from nptdms import TdmsFile
 import streamlit as st
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-from utils_drive import (
+from modules.utils_drive import (
     get_drive, download_file_bytes, upload_bytes_to_folder
 )
 
