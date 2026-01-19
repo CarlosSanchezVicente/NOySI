@@ -22,7 +22,7 @@ from modules import notion_read_transform as notion
 from modules import electrical_read_transform as elecr
 from modules import electrical_processing as elecp
 from modules import optical_read_transform as op
-from modules import drive_conn as drive
+from modules import extract_data as extract
 
 
 # DEFINITION
@@ -188,7 +188,7 @@ def main():
         # OPTICAL MEASUREMENT
         #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
 
-        drive.run_ingestion()
+        extract.run_ingestion()
         pass
         
 

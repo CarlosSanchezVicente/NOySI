@@ -12,7 +12,7 @@ import streamlit as st
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 from utils_drive import (
-    get_drive, list_folder, download_file_bytes, upload_bytes_to_folder
+    get_drive, download_file_bytes, upload_bytes_to_folder
 )
 
 # FUNCIONAMIENTO DRIVE CONN + INGESTA
@@ -42,7 +42,6 @@ WRITE_SCOPE = "https://www.googleapis.com/auth/drive.file"
 FULL_SCOPE = "https://www.googleapis.com/auth/drive"
 
 # Elige el alcance que necesitas:
-SCOPES = [FULL_SCOPE]  # o [READ_SCOPE] si solo vas a leer
 BRONZE_MANIFEST_NAME = "manifest_ingesta.csv"
 
 
@@ -198,16 +197,6 @@ def run_ingestion():
 """
             
 @st.cache_resource(show_spinner=False)
-
-def get_drive() -> GoogleDrive:
-    gauth = GoogleAuth()
-    gauth.settings["client_config_backend"] = "service"
-    gauth.settings["service_config"] = {
-        "client_json": json.loads(st.secrets["drive"]["service_account_json"]),
-        "scope": SCOPES,
-    }
-    gauth.ServiceAuth()
-    return GoogleDrive(gauth)
 
 def list_folder(drive: GoogleDrive, folder_id: str):
     q = f"'{folder_id}' in parents and trashed=false"
