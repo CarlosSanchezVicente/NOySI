@@ -221,7 +221,7 @@ def list_metano():
 def run_ingestion():
     drive = get_drive()
     metano_id = st.secrets["folders"]["metano_line"]
-    
+    st.write(metano_id)
 
     items = list_folder(drive, metano_id)
 
