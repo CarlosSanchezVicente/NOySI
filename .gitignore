@@ -121,6 +121,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
 .venv
 env/
 venv/
@@ -154,17 +155,29 @@ cython_debug/
 
 # Data
 _wip_/
-data/
-data/Bronze/
-data/Silver/
-data/Gold/
+data/*
+!data/bbdd/
+data/raw/
+data/processed/
+data/dev/
+results/
+*.db
+*.duckdb
+*.sqlite
+*.parquet
+*.tdms
+*.tdms_index
 
-# Streamlit
+# Streamlit y credenciales
 .streamlit/secrets.toml
 credentials.json
+*service_account*.json
+*.pem
+*.key
 
 # Temp folders
 .tmp.driveupload/
+.tmp.drivedownload/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

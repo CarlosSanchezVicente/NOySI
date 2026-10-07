@@ -1,14 +1,29 @@
-streamlit
-duckdb
-altair
-python-dotenv
-scipy
-nptdms
-notion
-notion-client
+# Dependencias de la app y del pipeline (Python 3.11). Versiones fijadas.
+# Notebooks/ML: requirements-notebooks.txt. Tests: requirements-dev.txt.
+
+# App
+streamlit==1.65.0
+altair==6.3.0
+
+# Datos
+pandas==3.0.6
+numpy==2.4.6
+scipy==1.17.1
+pyarrow==25.0.1
+duckdb==1.5.6
 nptdms==1.7.1
-streamlit-authenticator
-gdown
-PyDrive 
-oauth2client
-google-auth
+
+# Base de datos
+sqlalchemy==2.1.3
+psycopg2-binary==2.9.13
+
+# Fuentes externas
+notion-client==3.1.0
+requests==2.34.2
+google-auth==2.60.0
+google-api-python-client==2.201.0
+# Solo mientras main.py y extract_data.py lo importen (retirar en N-5)
+pydrive2==1.21.3
+
+# Configuración
+python-dotenv==1.2.4

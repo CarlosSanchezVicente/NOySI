@@ -1,0 +1,12 @@
+[project]
+name = "noysi"
+version = "0.1.0"
+description = "Infraestructura de datos del grupo NOySI (ITEFI-CSIC): ensayos de sensores de gases"
+requires-python = ">=3.11,<3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: usa datos reales en modo dev y dry_run (ejecutar a demanda con -m integration)",
+]
+addopts = "-m 'not integration'"
