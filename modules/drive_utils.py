@@ -12,8 +12,8 @@ from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload, MediaFi
 
 
 # VARIABLES
-FULL_SCOPE = "https://www.googleapis.com/auth/drive"    # Se selecciona alcance completo a la carpeta de Drive
-SCOPES = [FULL_SCOPE]  # o [READ_SCOPE] si solo vas a leer
+READ_SCOPE = "https://www.googleapis.com/auth/drive.readonly"    # Solo lectura (desarrollo)
+SCOPES = [READ_SCOPE]  # el alcance de escritura solo se activa en la Fase 9
 
 
 # DRIVE FUNCTIONS
@@ -23,8 +23,8 @@ def get_drive():
     # 1. Cargamos el JSON desde los secretos
     info = json.loads(st.secrets["drive"]["service_account_json"])
     
-    # 2. Definimos los permisos (Scopes)
-    SCOPES = ['https://www.googleapis.com/auth/drive']
+    # 2. Definimos los permisos (Scopes): solo lectura
+    SCOPES = [READ_SCOPE]
     
     # 3. Creamos las credenciales
     creds = service_account.Credentials.from_service_account_info(
