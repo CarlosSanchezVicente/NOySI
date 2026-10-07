@@ -1,6 +1,7 @@
 # IMPORTS
 import io
 import os
+import re
 import time
 import pandas as pd
 from datetime import datetime, timezone
@@ -11,9 +12,14 @@ from nptdms import TdmsFile
 import streamlit as st
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-from modules.utils_drive import (
-    get_drive, download_file_bytes, upload_bytes_to_folder
+
+
+# IMPORT FUNCTIONS FROM MODULES
+from modules.drive_utils import (
+    get_drive, download_file_bytes, upload_bytes_to_folder, es_tdms_time_relevante
 )
+from modules.notion_utils import obtain_data_notion
+
 
 # FUNCIONAMIENTO DRIVE CONN + INGESTA
 """
@@ -33,52 +39,10 @@ run_ingestion()
 """
 
 # VARIABLES
-# Usa el scope mínimo necesario. Para lectura y escritura, mejor drive.file o drive.
-# - readonly: solo lectura
-# - drive.file: leer y escribir archivos creados/abiertos por la app
-# - drive: acceso completo al Drive al que tenga permisos
-READ_SCOPE = "https://www.googleapis.com/auth/drive.readonly"
-WRITE_SCOPE = "https://www.googleapis.com/auth/drive.file"
-FULL_SCOPE = "https://www.googleapis.com/auth/drive"
-
-# Elige el alcance que necesitas:
-BRONZE_MANIFEST_NAME = "manifest_ingesta.csv"
 
 
-# FUNCIONES MANIFEST
-def ensure_manifest(drive, bronze_folder_id):
-    """Devuelve (df_manifest, manifest_file_id). Crea uno vacío si no existe."""
-    items = list_folder(drive, bronze_folder_id)
-    manifest = next((x for x in items if x.get("title") == BRONZE_MANIFEST_NAME), None)
 
-    if manifest is None:
-        # Crear manifest vacío
-        cols = ["file_id", "source_folder", "raw_title", "createdDate", "md5Checksum",
-                "bronze_file_id", "bronze_title", "processed_at_utc"]
-        df = pd.DataFrame(columns=cols)
-        data = df.to_csv(index=False).encode("utf-8")
-        mf_id = upload_bytes_to_folder(
-            drive, data, BRONZE_MANIFEST_NAME, bronze_folder_id, mime_type="text/csv"
-        )
-        return df, mf_id
-    else:
-        b = download_file_bytes(drive, manifest["id"])
-        df = pd.read_csv(io.BytesIO(b))
-        return df, manifest["id"]
-
-def save_manifest(drive, bronze_folder_id, manifest_file_id, df_manifest):
-    """Sobrescribe el manifest en Drive."""
-    data = df_manifest.to_csv(index=False).encode("utf-8")
-    # Subir como nuevo y (opcional) borrar el anterior, o simplemente crear/actualizar
-    # Con PyDrive2, lo más directo es crear un nuevo archivo y (opcional) borrar el viejo.
-    new_id = upload_bytes_to_folder(
-        drive, data, BRONZE_MANIFEST_NAME, bronze_folder_id, mime_type="text/csv"
-    )
-    # (Opcional) borrar el anterior:
-    # f = drive.CreateFile({"id": manifest_file_id})
-    # f.Delete()
-    return new_id
-
+# AUXILIARY FUNCTIONS - LEVEL 2 
 def clean_and_extract(df_raw: pd.DataFrame) -> pd.DataFrame:
     """
     TU lógica de limpieza:
@@ -91,11 +55,6 @@ def clean_and_extract(df_raw: pd.DataFrame) -> pd.DataFrame:
     df = df_raw.dropna(how="all").drop_duplicates()
     return df
 
-def es_tdms_time_relevante(title: str) -> bool:
-    if not title:
-        return False
-    t = title.lower()
-    return t.endswith(".tdms") and "time" in t and not t.endswith(".tdms_index")
 
 def process_one_tdms_file(drive, file_meta, bronze_folder_id):
     file_id = file_meta["id"]
@@ -134,103 +93,65 @@ def process_one_tdms_file(drive, file_meta, bronze_folder_id):
     }
 
 
-# FUNCIÓN PRINCIPAL
-"""
-def run_ingestion():
-    st.header("Ingesta a Bronze")
+
+
+
+
+# MAIN FUNCTION
+import io
+from nptdms import TdmsFile
+import pandas as pd
+# Importas tus funciones de conexión a Postgres y Notion
+# from database import engine, update_notion_status
+
+def run_data_pipeline():
     drive = get_drive()
+    # IDs de carpetas desde tus secretos
+    folder_bronce_id = st.secrets["folders"]["bronce_parquet"]
+    folder_procesados_id = st.secrets["folders"]["procesados_tdms"]
+    
+    # 1. CARGA MASIVA DE NOTION (Para eficiencia)
+    # Supongamos que esta función devuelve un DF con 'experiment_id' como índice
+    df_notion_all = obtain_data_notion(process_type, date, pages_number=100) 
 
-    src_metano = st.secrets["folders"]["metano"]
-    src_permeacion = st.secrets["folders"]["permeacion"]
-    bronze_id = st.secrets["folders"]["bronze"]
+    items = list_folder(drive, st.secrets["folders"]["metano_line"])
+    tdms_relevantes = [f for f in items if es_tdms_time_relevante(f.get("name", ""))]
 
-    df_manifest, manifest_id = ensure_manifest(drive, bronze_id)
-    ya_procesados = set(df_manifest["file_id"].astype(str)) if not df_manifest.empty else set()
-
-    st.write("Leyendo listados de carpetas de origen…")
-    items_met = list_folder(drive, src_metano)
-    items_perm = list_folder(drive, src_permeacion)
-
-    pendientes = []
-    for x in items_met:
-        if x["id"] not in ya_procesados:
-            x["__source"] = "LineaMetano"
-            pendientes.append(x)
-    for x in items_perm:
-        if x["id"] not in ya_procesados:
-            x["__source"] = "LineaPermeacion"
-            pendientes.append(x)
-
-    st.info(f"Archivos pendientes: {len(pendientes)}")
-
-    if st.button("Realizar ingesta"):
-        rows = []
-        progress = st.progress(0)
-        for i, meta in enumerate(pendientes, start=1):
-            try:
-                bronze_id_out, bronze_title, created, md5, raw_title = process_one_file(
-                    drive, meta, bronze_id
-                )
-                rows.append({
-                    "file_id": meta["id"],
-                    "source_folder": meta["__source"],
-                    "raw_title": raw_title,
-                    "createdDate": created,
-                    "md5Checksum": md5,
-                    "bronze_file_id": bronze_id_out,
-                    "bronze_title": bronze_title,
-                    "processed_at_utc": datetime.now(timezone.utc).isoformat(),
-                })
-                st.success(f"Procesado: {raw_title} → {bronze_title}")
-            except Exception as e:
-                st.error(f"Error con {meta.get('title')}: {e}")
-            finally:
-                progress.progress(i / max(1, len(pendientes)))
-
-        if rows:
-            df_new = pd.DataFrame(rows)
-            df_manifest = pd.concat([df_manifest, df_new], ignore_index=True)
-            manifest_id = save_manifest(drive, bronze_id, manifest_id, df_manifest)
-            st.success("Manifest actualizado.")
-        else:
-            st.info("No había nada que procesar.")
-"""
-            
-@st.cache_resource(show_spinner=False)
-def list_folder(_drive, folder_id: str):
-    query = f"'{folder_id}' in parents and trashed=false"
-    results = _drive.files().list(q=query, fields="files(id, name)").execute()
-    return results.get('files', [])
-
-def list_metano():
-    drive = get_drive()
-    metano_id = st.secrets["folders"]["metano"]
-
-    items = list_folder(drive, metano_id)
-
-    st.write(f"Archivos en metano_line: {len(items)}")
-    for f in items:
-        st.write({
-            "title": f.get("title"),
-            "id": f.get("id"),
-            "mimeType": f.get("mimeType"),
-            "createdDate": f.get("createdDate"),
-            "modifiedDate": f.get("modifiedDate"),
-        })
-
-def run_ingestion():
-    drive = get_drive()
-    metano_id = st.secrets["folders"]["metano_line"]
-    st.write(metano_id)
-
-    items = list_folder(drive, metano_id)
-
-    tdms_relevantes = [
-        f for f in items
-        if es_tdms_time_relevante(f.get("title", ""))
-    ]
-
-    st.write(f"TDMS relevantes: {len(tdms_relevantes)}")
     for f in tdms_relevantes:
-        st.write(f["title"])
+        try:
+            file_id = f["id"]
+            file_name = f["name"]
+            experiment_id = extraer_experiment_id(file_name) # Tu función regex
 
+            # --- PASO 1: DESCARGA Y LECTURA (RAM) ---
+            df_raw = descargar_y_leer_tdms(drive, file_id) # La función que hablamos antes
+
+            # --- PASO 2: OBTENER METADATOS ESPECÍFICOS ---
+            # Filtramos los datos de Notion para este experimento
+            df_metadatos = df_notion_all[df_notion_all['experiment_id'] == experiment_id]
+
+            if df_metadatos.empty:
+                st.warning(f"⚠️ Saltando {experiment_id}: No existe en Notion.")
+                continue
+
+            # --- PASO 3: GUARDAR BACKUPS EN DRIVE (CAPA BRONCE) ---
+            # Guardamos el sensor en Parquet
+            guardar_dataframe_en_drive(drive, df_raw, f"{experiment_id}_sensor.parquet", folder_bronce_id)
+            # Guardamos el snapshot de Notion en Parquet
+            guardar_dataframe_en_drive(drive, df_metadatos, f"{experiment_id}_notion.parquet", folder_bronce_id)
+
+            # --- PASO 4: CARGA A POSTGRESQL (PLATA) ---
+            # Unimos metadatos y sensor en un solo DF para la tabla Silver
+            df_plata = df_raw.copy()
+            for col in df_metadatos.columns:
+                df_plata[col] = df_metadatos[col].iloc[0]
+
+            df_plata.to_sql('lecturas_sensores', engine, schema='silver', if_exists='append', index=False)
+
+            # --- PASO 5: LIMPIEZA FINAL ---
+            mover_archivo_a_procesados(drive, file_id, folder_procesados_id)
+            
+            st.success(f"✅ Procesado e integrados backups para {experiment_id}")
+
+        except Exception as e:
+            st.error(f"❌ Error procesando {f['name']}: {str(e)}")

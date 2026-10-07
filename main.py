@@ -18,11 +18,13 @@ from pydrive2.drive import GoogleDrive
 #from google.auth.transport import requests
 
 # IMPORT FUNCTIONS FROM MODULES
-from modules import notion_read_transform as notion
+from modules import notion_utils as notion
 from modules import electrical_read_transform as elecr
 from modules import electrical_processing as elecp
 from modules import optical_read_transform as op
-from modules import extract_data as extract
+from modules.drive_utils import (
+    get_drive, download_file_bytes, upload_bytes_to_folder
+)
 
 
 # DEFINITION
@@ -188,7 +190,7 @@ def main():
         # OPTICAL MEASUREMENT
         #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
 
-        extract.run_ingestion()
+        extract.run_data_pipeline()
         pass
         
 

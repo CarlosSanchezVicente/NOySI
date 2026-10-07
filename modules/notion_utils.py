@@ -1,19 +1,19 @@
 # IMPORTS
 import pandas as pd
 import requests
-from datetime import datetime
+import datetime
 import json
 import notion_client
-import duckdb
+from sqlalchemy import create_engine
 import statistics
-from datetime import datetime
 import streamlit as st 
 import os
 
 # IMPORT FUNCTIONS FROM MODULES
-#from modules import notion_trans_s as transform_notion
-from modules import duckdb as db
-from modules import read_directory as dir
+from modules.drive_utils import (
+    upload_df_to_drive_as_parquet
+)
+
 
 # SOURCES
 # API Notion: https://www.notion.so/es-la/help/create-integrations-with-the-notion-api
@@ -32,6 +32,10 @@ GASES_DB_ID = st.secrets["tokens"]["GASES_DB_ID"]
 MEDIDAS_DB_ID = st.secrets["tokens"]["MEDIDAS_DB_ID"]
 path_db = st.secrets["paths"]["path_db"]
 
+
+# SQLALCHEMY ENGINE
+DATABASE_URL = st.secrets["database"]["database_url"]
+engine = create_engine(DATABASE_URL)
 
 
 # DEFINITIONS
@@ -240,7 +244,6 @@ def get_pages_100(headers, DATABASE_ID, pages_number, process_type, path):
 
     return data
 
-
 def get_pages_more_100(headers, DATABASE_ID, path, pages_number=None):
     """Summary: function to obtain the number of pages specified of the databases. This function use the 'request' library to connecto to 
         the API.
@@ -277,7 +280,6 @@ def get_pages_more_100(headers, DATABASE_ID, path, pages_number=None):
         json.dump(results, f, ensure_ascii=False, indent=4)
 
     return results
-
 
 def get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date):
     """Summary: function to get the Notion database pages after a specified date. This function use the "notion_client" library to connect 
@@ -322,6 +324,55 @@ def get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date):
     
     return data
 
+def get_pages_by_status(NOTION_TOKEN, DATABASE_ID, path):
+    """
+    Obtiene páginas de Notion donde el 'Status' está vacío o es 'Pendiente'.
+    Maneja automáticamente la paginación si hay más de 100 registros.
+    """
+    notion = notion_client.Client(auth=NOTION_TOKEN)
+    
+    results = []
+    has_more = True
+    next_cursor = None
+
+    # Definición del filtro: (Status es vacío) O (Status es "Pendiente")
+    # Nota: Asegúrate de que "Status" es el nombre exacto de la columna en Notion 
+    query_filter = {
+        "or": [
+            {
+                "property": "Status",
+                "status": {
+                    "is_empty": True
+                }
+            },
+            {
+                "property": "Status",
+                "status": {
+                    "equals": "Pendiente"
+                }
+            }
+        ]
+    }
+
+    while has_more:
+        # Ejecutar la consulta con filtro y paginación
+        response = notion.databases.query(
+            database_id=DATABASE_ID,
+            filter=query_filter,
+            start_cursor=next_cursor
+        )
+        
+        results.extend(response["results"])
+        
+        # Actualizar variables de control de bucle
+        has_more = response["has_more"]
+        next_cursor = response["next_cursor"]
+
+    # Guardar los resultados en el archivo especificado
+    with open(path, 'w', encoding='utf8') as f:
+        json.dump(results, f, ensure_ascii=False, indent=4)
+    
+    return results
 
 def extract_data_from_json(pages):
     """Summary: function to extract the data from the one database
@@ -457,6 +508,26 @@ def extract_data_from_json(pages):
     return pd.DataFrame(resultados)
 
 
+# AUXILIARY FUNCTIONS - UPLOAD DATA IN NOTION
+def update_pages_to_processed(NOTION_TOKEN, page_ids):
+    """
+    Recorre una lista de IDs de página y cambia su propiedad 'Status' a 'Procesado'.
+    """
+    notion = notion_client.Client(auth=NOTION_TOKEN)
+    for p_id in page_ids:
+        notion.pages.update(
+            page_id=p_id,
+            properties={
+                "Status": {
+                    "status": {
+                        "name": "Procesado"
+                    }
+                }
+            }
+        )
+    print(f"Se han actualizado {len(page_ids)} estados en Notion a 'Procesado'.")
+
+
 # AUXILIARY FUNCTIONS - TRANSFORM DATA
 def transform_rages(string):
     """Summary: function to transform the string with number o range in a integer.
@@ -475,7 +546,6 @@ def transform_rages(string):
         return statistics.mean([float(str2[0]), float(str2[1])])   # Return the mean of both numbers
     else:
         return float(string)
-
 
 def remove_symbol_nm(string):
     """Summary: function to remove the unit or diferent symbols.
@@ -505,7 +575,6 @@ def remove_symbol_nm(string):
             elif 'um' in str3[1]:
                 return int(str3[0])*1000
 
-
 def remove_symbol_humidity(string):
     """Summary: function to remove the unit or diferent symbols.
 
@@ -520,7 +589,6 @@ def remove_symbol_humidity(string):
     else:
         str2 = string.split('%')
         return int(str2[0])
-
 
 def remove_symbol_bottle(string):
     """Summary: function to remove the unit or diferent symbols.
@@ -541,7 +609,6 @@ def remove_symbol_bottle(string):
             str2 = string.lower().split('ppm')
             return float(str2[0])*1000
 
-
 def sort_gases_names(string):
     if ',' in string:
         words = string.split(', ')
@@ -549,7 +616,6 @@ def sort_gases_names(string):
         return ', '.join(words)
     else:
         return string
-
 
 def replace_nan_nat_none(df):
     columns_name = df.columns
@@ -568,21 +634,86 @@ def replace_nan_nat_none(df):
     
     return df
 
+def transform_notion_df(df, db_name):
+    # COLUMN TRANSFORMATIONS COMMON TO ALL DATAFRAMES 
+    # Remove space blanc before or after each column name
+    df.rename(columns=lambda x: x.strip(), inplace=True)
 
+    # Create column ID
+    df.reset_index(inplace=True)
+    
+    # Create load_ts column with ingestion date
+    df['load_ts'] = str(datetime.now())
+    
+    # Create variable name of new order and map 
+    new_order = ID_dict[db_name]['DB_new_order']
+    maps = ID_dict[db_name]['DB_map']
+    
+    # Change the column names such as the database
+    df = df[new_order]
+    df.rename(columns=maps, inplace=True)
+
+    
+    # TRANSFORMATION OF COLUMNS SPECIFIC TO EACH DATAFRAME
+    if db_name == 'MATERIALES_DB':
+        # Transform range to int
+        df['main_comp_percentage'] = df['main_comp_percentage'].apply(lambda row: transform_rages(row))
+        # Remove the units and symbols
+        df['thickness_nm'] = df['thickness_nm'].apply(lambda row: remove_symbol_nm(row))
+        # Remove the units and symbols
+        df['size_material_nm'] = df['size_material_nm'].apply(lambda row: remove_symbol_nm(row))
+        # Data charged to database
+        st.markdown('##### Materiales stored to the database:')
+        name_values = df['name_material'].tolist()
+        st.write(pd.DataFrame({'Nombre de los materiales': name_values}))
+
+    elif db_name == 'DISOLUCIONES_DB':
+        # Data charged to database
+        st.markdown('##### Solutions  stored to the database:')
+        name_values = df['name_solution'].tolist()
+        st.write(pd.DataFrame({'Nombre de las disoluciones': name_values}))
+
+    elif db_name == 'SENSORES_DB':
+        # Data charged to database
+        st.markdown('##### Sensors  stored to the database:')
+        name_values = df['name_sensor'].tolist()
+        st.write(pd.DataFrame({'Nombre de los sensores': name_values})) 
+
+    elif db_name == 'LED_DB':
+        # Data charged to database
+        st.markdown('##### Leds  stored to the database:')
+        name_values = df['name_led'].tolist()
+        st.write(pd.DataFrame({'Nombre de los leds': name_values}))
+
+    elif db_name == 'GASES_DB':
+        # Remove the units and symbols
+        df['max_concentration_ppb'] = df['max_concentration_ppb'].apply(lambda row: remove_symbol_bottle(row))
+        # Data charged to database
+        st.markdown('##### Gases  stored to the database:')
+        name_values = df['name_gas'].tolist()
+        st.write(pd.DataFrame({'Nombre de los gases': name_values}))
+
+    elif db_name == 'MEDIDAS_DB':
+        # Remove the units and symbols
+        df['humidity_percentage'] = df['humidity_percentage'].apply(lambda row: remove_symbol_humidity(row))
+        # Add date to file name
+        df['label'] = df['label'].apply(lambda row: sort_gases_names(row))
+        # Data charged to database
+        st.markdown('##### Measurements stored to the database:')
+        name_values = df['conn_measurement'].tolist()
+        st.write(pd.DataFrame({'Nombre de las medidas': name_values}))
+                
+    # Transform NaT, None, NaN to Unkown
+    df = replace_nan_nat_none(df)
+
+    return df
 
 
 # MAIN FUNCTIONS
-def obtain_data_notion(process_type, date, pages_number=100):   #config
+def obtain_data_notion():   #config
     """Summary: function to obtain the pages of the databases or from last update('process_type' indicates the behavior). 
 
     Args:
-        process_type (string): it indicates the behavior of the ingestion. 
-            - 'process_type'=number -> download all pages indicated in pages_number. 
-            - 'process_type'=last_upload -> read the date of the last upload in the csv file.
-            - 'process_type'=time -> download all pages from last update. 
-        date (string, optional): date from which the information will be extracted from the database. The format of date would be: 
-            YYYY-MM-DD. Defaults to 100. Defaults to None.
-        pages_number (integer, optional): number of pages to download. Defaults to 100.
 
     Returns:
         pages (json): data from Notion
@@ -606,22 +737,8 @@ def obtain_data_notion(process_type, date, pages_number=100):   #config
         # Create the path
         path = f"./data/Bronze/{file_name}.json"
 
-        # If the user want to obtain a specific numbers of pages
-        if process_type == 'number' or process_type == 'total':
-            if pages_number == 100:
-                pages = get_pages_100(headers, DATABASE_ID, 100, process_type, path)
-            else:
-                pages = get_pages_more_100(headers, DATABASE_ID, path, pages_number=None)
-        # If the user want to obtain the pages from last update
-        elif process_type == 'last_upload':
-            date = dir.read_last_charge_date()
-            pages = get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date)
         # If the user want to obtain the pages from specific date
-        elif process_type == 'date':
-            pages = get_pages_select_date(NOTION_TOKEN, DATABASE_ID, path, date)
-        else:
-            print('Error: You have entered an incorrect value for the data entry type. \nYou have to introduce: "number" or "total"')
-            #return 
+        pages = get_pages_by_status(NOTION_TOKEN, DATABASE_ID, path)
 
         # Obtain a dataframe from json
         df = extract_data_from_json(pages)
@@ -704,19 +821,6 @@ def obtain_data_notion(process_type, date, pages_number=100):   #config
             # Connect with database
             con = duckdb.connect(path_db)
             table_name = ID_dict[db_name]['db_name'] + '_hist'   # Construct table name
-
-            if process_type == 'time':
-                # Change the ID column if process_type is different to 'total'. In the case of process_type='time', ID is different to index and
-                # the first value of this column will be the last value stored in the database. 
-                # Build the query
-                query_ID = "SELECT MAX(ID) AS max_id FROM " + table_name + ";"
-
-                # Read the las value of database
-                last_ID_df = con.execute(query_ID).df()
-                last_ID_value = last_ID_df.iloc[0,0] + 1
-
-                # Update the ID column
-                df['ID'] = range(last_ID_value, len(df) + last_ID_value)
             
             # Build the query
             query_write = """
@@ -731,3 +835,72 @@ def obtain_data_notion(process_type, date, pages_number=100):   #config
             #if db_name == 'MEDIDAS_DB':
             #    return name_values
     
+
+# PARSEAR LAS , POR . DEBIDO A QUE NOTION ESTÁ EN ESPAÑOL
+def parse_notion_purity(value):
+    # 1. Si el valor es nulo, devolvemos 0 o None
+    if not value: return 0.0
+    
+    # 2. Convertimos a string y cambiamos comas por puntos por si acaso
+    clean_val = str(value).replace(',', '.')
+    
+    # 3. Si detecta un rango (ej. "77.0-82.6")
+    if '-' in clean_val:
+        # Extraemos todos los números (floats) encontrados en la cadena
+        numbers = [float(n) for n in re.findall(r"\d+\.\d+|\d+", clean_val)]
+        return sum(numbers) / len(numbers) if numbers else 0.0
+    
+    # 4. Si es un número único
+    try:
+        return float(clean_val)
+    except ValueError:
+        return 0.0
+
+# Ejemplo de uso:
+# print(parse_notion_purity("77,0-82,6")) -> Devuelve 79.8
+
+
+def obtain_data_notion(NOTION_TOKEN, engine, ID_list, ID_dict, service):
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    new_measurements = []
+
+    for db_name, DATABASE_ID in ID_list.items():
+        # 1. Leer de Notion (solo Pendientes/Vacíos)
+        # Importante: get_pages_by_status debe devolver los datos crudos
+        pages = get_pages_by_status(NOTION_TOKEN, DATABASE_ID) 
+        
+        # 2. Convertir a DataFrame
+        df_raw = extract_data_from_json(pages)
+
+        # CONSIDERACIÓN 1: Si no hay registros nuevos, saltar al siguiente
+        if df_raw.empty:
+            print(f"Sin novedades en {db_name}. Saltando...")
+            continue
+
+        # CONSIDERACIÓN 2 y 3: Guardar "Foto" en Drive (Bronze)
+        # folder_name sería '202X-XX-XX' la fecha actual, filename 'db_name.parquet'
+        upload_df_to_drive_as_parquet(service, df_raw, f"{db_name}.parquet", current_date)
+
+        # TRANSFORMACIONES
+        df = df_raw.copy()
+        df.rename(columns=lambda x: x.strip(), inplace=True)
+        df['load_ts'] = datetime.now()
+        
+        # Mapeos y limpiezas específicas...
+        df = transform_notion_df(df, db_name)
+
+        # --- GUARDADO EN POSTGRES (Capa Silver) ---
+        # Se guardan todas las tablas a excepción de la tabla 
+        table_name = (ID_dict[db_name]['db_name'] + '_hist').lower()
+        df.to_sql(table_name, engine, schema='silver', if_exists='append', index=False)
+
+        # CONSIDERACIÓN 4: Cambiar Status en Notion a "Procesado"
+        # Usamos los IDs que extrajimos de 'pages'
+        list_ids = [page["id"] for page in pages]
+        update_pages_to_processed(NOTION_TOKEN, list_ids)
+        
+        # Guardar nombres de medidas si es la DB de experimentos
+        if db_name == 'MEDIDAS_DB':
+            new_measurements = df['conn_measurement'].tolist()
+
+    return new_measurements
