@@ -1,157 +1,102 @@
-# IMPORTS
+"""Coordinador de la ingesta: Drive (TDMS) -> Bronze -> Silver.
+
+Versión mínima. De momento solo funciona en ``dry_run``: lista los TDMS de Drive y
+dice qué haría, sin descargar ni escribir nada. La ingesta real (Parquet en Bronze,
+``bronze.ingestion_log``, Silver) se construye en la Fase 3.
+"""
 import io
-import os
-import re
-import time
+import logging
+
 import pandas as pd
-from datetime import datetime, timezone
-import json
-import tempfile
-from typing import List, Tuple, Optional
 from nptdms import TdmsFile
-import streamlit as st
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
 
-
-# IMPORT FUNCTIONS FROM MODULES
 from modules.drive_utils import (
-    get_drive, download_file_bytes, upload_bytes_to_folder, es_tdms_time_relevante
+    list_folder, es_tdms_time_relevante, extraer_experiment_id
 )
-from modules.notion_utils import obtain_data_notion
+
+logger = logging.getLogger(__name__)
+
+# Clave (en config.drive_folders) de la carpeta de TDMS de la línea de botellas (antes "metano").
+# N-39 la sustituirá por un mapeo de nombres con alias.
+DEFAULT_FOLDER_KEY = "metano_line"
 
 
-# FUNCIONAMIENTO DRIVE CONN + INGESTA
-"""
-run_ingestion()
-│
-├── list_folder()             ← SOLO lista metadatos
-│
-├── es_tdms_time_relevante()  ← FILTRA
-│
-├── process_one_tdms_file()   ← AQUÍ se leen los archivos
-│       ├── download_file_bytes()
-│       ├── read_tdms_to_df()  ✅ AQUÍ se hace la lectura TDMS REAL
-│       ├── clean_and_extract()
-│       └── upload_bytes_to_folder()
-│
-└── actualización del manifest
-"""
+# AUXILIARY FUNCTIONS
+def make_engine(cfg):
+    """Crea la conexión SQLAlchemy a PostgreSQL con ``cfg.database_url``.
 
-# VARIABLES
-
-
-
-# AUXILIARY FUNCTIONS - LEVEL 2 
-def clean_and_extract(df_raw: pd.DataFrame) -> pd.DataFrame:
+    Falla si la URL está vacía (en ``dev`` lo está salvo que se defina
+    ``NOYSI_DEV_DATABASE_URL``), para no escribir nunca en una BBDD sin querer.
     """
-    TU lógica de limpieza:
-    - parsing de columnas
-    - filtrado NaN
-    - recorte de ventanas
-    - normalización de unidades, etc.
+    if not cfg.database_url:
+        raise ValueError(
+            "database_url vacío: en dev defina NOYSI_DEV_DATABASE_URL; "
+            "no se crea ninguna conexión a PostgreSQL."
+        )
+    from sqlalchemy import create_engine   # import perezoso: solo si se necesita
+    return create_engine(cfg.database_url)
+
+
+def read_tdms_to_df(raw_bytes: bytes) -> pd.DataFrame:
+    """Lee un TDMS (en bytes) y devuelve un DataFrame con una columna por canal.
+
+    Parameters
+    ----------
+    raw_bytes : bytes
+        Contenido del archivo ``.tdms``.
     """
-    # Ejemplo trivial: quitar columnas vacías y duplicados
-    df = df_raw.dropna(how="all").drop_duplicates()
-    return df
-
-
-def process_one_tdms_file(drive, file_meta, bronze_folder_id):
-    file_id = file_meta["id"]
-    title = file_meta["title"]
-    created = file_meta.get("createdDate")
-    md5 = file_meta.get("md5Checksum")
-
-    raw_bytes = download_file_bytes(drive, file_id)
-
-    df_raw = read_tdms_to_df(raw_bytes)
-    df_clean = clean_and_extract(df_raw)
-
-    buf = io.BytesIO()
-    df_clean.to_parquet(buf, index=False)
-    buf.seek(0)
-
-    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    bronze_title = f"{title}_clean_{ts}.parquet"
-
-    bronze_file_id = upload_bytes_to_folder(
-        drive,
-        buf.getvalue(),
-        bronze_title,
-        bronze_folder_id,
-        mime_type="application/octet-stream"
-    )
-
-    return {
-        "file_id": file_id,
-        "raw_title": title,
-        "createdDate": created,
-        "md5Checksum": md5,
-        "bronze_file_id": bronze_file_id,
-        "bronze_title": bronze_title,
-        "processed_at_utc": datetime.now(timezone.utc).isoformat(),
-    }
-
-
-
-
+    tdms_file = TdmsFile.read(io.BytesIO(raw_bytes))
+    data = {}
+    for group in tdms_file.groups():
+        for channel in group.channels():
+            data[channel.name] = pd.Series(channel[:])
+    return pd.DataFrame(data)
 
 
 # MAIN FUNCTION
-import io
-from nptdms import TdmsFile
-import pandas as pd
-# Importas tus funciones de conexión a Postgres y Notion
-# from database import engine, update_notion_status
+def run_data_pipeline(cfg, drive, engine=None, dry_run=True, folder_key=DEFAULT_FOLDER_KEY):
+    """Revisa la carpeta de TDMS de Drive y dice qué ingeriría.
 
-def run_data_pipeline():
-    drive = get_drive()
-    # IDs de carpetas desde tus secretos
-    folder_bronce_id = st.secrets["folders"]["bronce_parquet"]
-    folder_procesados_id = st.secrets["folders"]["procesados_tdms"]
-    
-    # 1. CARGA MASIVA DE NOTION (Para eficiencia)
-    # Supongamos que esta función devuelve un DF con 'experiment_id' como índice
-    df_notion_all = obtain_data_notion(process_type, date, pages_number=100) 
+    Parameters
+    ----------
+    cfg : config.Config
+    drive : cliente de Drive (``drive_utils.get_drive``), solo lectura.
+    engine : conexión a PostgreSQL; no se usa en ``dry_run``.
+    dry_run : si es True (por defecto) solo informa, sin descargar ni escribir.
+    folder_key : clave de la carpeta en ``cfg.drive_folders``.
 
-    items = list_folder(drive, st.secrets["folders"]["metano_line"])
-    tdms_relevantes = [f for f in items if es_tdms_time_relevante(f.get("name", ""))]
+    Returns
+    -------
+    dict
+        Resumen: archivos relevantes, su MED y la acción prevista.
+    """
+    if not dry_run:
+        raise NotImplementedError(
+            "La ingesta real (Bronze/Silver) se implementa en la Fase 3; usar dry_run=True."
+        )
 
-    for f in tdms_relevantes:
-        try:
-            file_id = f["id"]
-            file_name = f["name"]
-            experiment_id = extraer_experiment_id(file_name) # Tu función regex
+    folder_id = cfg.drive_folders.get(folder_key)
+    if not folder_id:
+        raise KeyError(f"Falta la carpeta '{folder_key}' en la configuración (folders.{folder_key})")
 
-            # --- PASO 1: DESCARGA Y LECTURA (RAM) ---
-            df_raw = descargar_y_leer_tdms(drive, file_id) # La función que hablamos antes
+    items = list_folder(drive, folder_id)
+    relevant = [f for f in items if es_tdms_time_relevante(f.get("name", ""))]
 
-            # --- PASO 2: OBTENER METADATOS ESPECÍFICOS ---
-            # Filtramos los datos de Notion para este experimento
-            df_metadatos = df_notion_all[df_notion_all['experiment_id'] == experiment_id]
+    files = []
+    for f in relevant:
+        med = extraer_experiment_id(f["name"])
+        files.append({
+            "name": f["name"],
+            "med": med,
+            "size_bytes": f.get("size"),
+            "modified": f.get("modifiedTime"),
+            "action": "descargaría y leería" if med else "omitido: el nombre no contiene MED-<n>",
+        })
+        logger.info("dry_run: %s (%s)", f["name"], med)
 
-            if df_metadatos.empty:
-                st.warning(f"⚠️ Saltando {experiment_id}: No existe en Notion.")
-                continue
-
-            # --- PASO 3: GUARDAR BACKUPS EN DRIVE (CAPA BRONCE) ---
-            # Guardamos el sensor en Parquet
-            guardar_dataframe_en_drive(drive, df_raw, f"{experiment_id}_sensor.parquet", folder_bronce_id)
-            # Guardamos el snapshot de Notion en Parquet
-            guardar_dataframe_en_drive(drive, df_metadatos, f"{experiment_id}_notion.parquet", folder_bronce_id)
-
-            # --- PASO 4: CARGA A POSTGRESQL (PLATA) ---
-            # Unimos metadatos y sensor en un solo DF para la tabla Silver
-            df_plata = df_raw.copy()
-            for col in df_metadatos.columns:
-                df_plata[col] = df_metadatos[col].iloc[0]
-
-            df_plata.to_sql('lecturas_sensores', engine, schema='silver', if_exists='append', index=False)
-
-            # --- PASO 5: LIMPIEZA FINAL ---
-            mover_archivo_a_procesados(drive, file_id, folder_procesados_id)
-            
-            st.success(f"✅ Procesado e integrados backups para {experiment_id}")
-
-        except Exception as e:
-            st.error(f"❌ Error procesando {f['name']}: {str(e)}")
+    return {
+        "dry_run": True,
+        "files_in_folder": len(items),
+        "tdms_relevant": len(relevant),
+        "files": files,
+    }

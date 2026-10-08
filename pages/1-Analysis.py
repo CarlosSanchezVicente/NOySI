@@ -3,14 +3,24 @@ import pandas as pd
 import duckdb
 import streamlit as st 
 import altair as alt
-import platform 
-from pathlib import Path
 import datetime
 import re
 
+import logging
+
+from config import LOGO_PATH, load_config
+
+logger = logging.getLogger(__name__)
+
+# CONFIGURATION PAGE (set_page_config debe ser el primer comando de Streamlit)
+st.set_page_config(
+        page_title='Analysis',
+        page_icon='📈'
+    )
+
 # AUTHENTICATION STATUS
-st.logo('./img/NoySI.png', size="medium")
-if not st.session_state['authentication_status']:
+st.logo(str(LOGO_PATH), size="medium")
+if not st.session_state.get('authentication_status', False):
     st.info('Please Login from the Home page and try again.')
     st.stop()
 
@@ -106,19 +116,8 @@ FROM data_methane_pos
 WHERE file_title = ?;
  """
 
-# READ VARIABLE STREAMLIT CLOUD (TOML)
-path_db = st.secrets["paths"]["path_db"]
-#print("Este es el path de la base de datos: ", path_db)
 
-# Inicializar la conexión con BBDD
-#conn = duckdb.connect(database=':memory:')
-
-# CONFIGURATION PAGE
 #st.title('Data analysis and plot the experiment')
-st.set_page_config(
-        page_title='Analysis',
-        page_icon='📈'
-    )
 #st.sidebar.success('Select the parameters:')
 st.sidebar.markdown("### Select the parameters:")
 
@@ -126,36 +125,6 @@ st.sidebar.markdown("### Select the parameters:")
 
 # AUXILIARY FUNCTIONS
 
-def resolve_db_path() -> Path:
-    # Leer ruta desde secretos (paths -> path_db)
-    secret_path = st.secrets.get("paths", {}).get("path_db")
-
-    # Si estamos en Windows (tu PC), usa tal cual lo que venga en secrets
-    if platform.system() == "Windows":
-        if secret_path:
-            return Path(secret_path)
-        # Por si falta en secrets, usa un valor por defecto local
-        return Path(r"C:\Users\carlo\NOySI\data\Silver\LabSilver.db")
-
-    # Si NO estamos en Windows (Cloud/Linux):
-    # Si el secret es una ruta de Windows (C:\ o C:/), no sirve en Cloud → fallback
-    if secret_path and (secret_path.startswith("C:\\") or secret_path.startswith("C:/")):
-        # Intenta archivo dentro del repo (solo lectura)
-        repo_db = Path(__file__).resolve().parents[1] / "data" / "Silver" / "LabSilver.db"
-        if repo_db.exists():
-            return repo_db
-        # Si no existe, usa /tmp (podrías crear o copiar ahí si lo necesitas)
-        return Path("/tmp/LabSilver.db")
-
-    # Si el secret ya es válido para Linux (por ejemplo "/tmp/LabSilver.db" o ruta del repo)
-    if secret_path:
-        return Path(secret_path)
-
-    # Sin secret: intenta repo; si no existe, /tmp
-    repo_db = Path(__file__).resolve().parents[1] / "data" / "Silver" / "LabSilver.db"
-    return repo_db if repo_db.exists() else Path("/tmp/LabSilver.db")
-
-db_path = resolve_db_path()
 
 
 
@@ -164,26 +133,26 @@ def filter_df(df, column_result, column_filter, var_req, start_time_req, end_tim
     # Filter u
     if (var_req != '') and (start_time_req == None):
         df_filtered = df[df[column_filter] == var_req]
-        print(df_filtered)
-        print('Entra en 1')
+        logger.debug('filter_df: %d filas', len(df_filtered))
+        logger.debug('filter_df: rama 1')
 
     # Filter only by start_time_req
     elif (start_time_req != None) and (var_req == ''):
         df_filtered = df[(df['record_created_time'] >= start_time_req) & 
                          (df['record_created_time'] <= end_time_req)]
-        print('Entra en 2')
+        logger.debug('filter_df: rama 2')
     
     # Filter using both
     elif (start_time_req != None) and (var_req == ''):
         df_filtered = df[(df['record_created_time'] >= start_time_req) & 
                          (df['record_created_time'] <= end_time_req) & 
                          (df[column_filter] == var_req)]
-        print('Entra en 3')
+        logger.debug('filter_df: rama 3')
 
     # No filter
     else:
         df_filtered = df
-        print('Entra en 4')
+        logger.debug('filter_df: rama 4')
 
     list = df_filtered[column_result].unique()
     names = ['']
@@ -304,7 +273,7 @@ def obtain_correct_spectra(data_pos_df, intensities_df):
         # Rename the column name
         column_name = f"Cycle {i+1} ({columns_names[i]} ppb)"
         spectra_df.columns = [column_name]
-        print(spectra_df)
+        logger.debug('spectra_df: %d filas', len(spectra_df))
             
         if spectra_complete_df.empty:
             spectra_complete_df = spectra_df.copy()
@@ -337,11 +306,28 @@ def select_concentration_to_plot(df, concentration, wavelength_numbers_df):
 
 
 # CONNECTION TO DATABASE
-# Create a connection to a file called 'LabSilver.db'
-con = duckdb.connect(path_db)
-# Create a connection to a file called 'gold_lab.db'
-conn = duckdb.connect("./data/Gold/LabGold.db")
-# Basic Query 
+# Las rutas dependen de NOYSI_ENV (dev -> data/dev/*_dev.db, prod -> data/Silver y data/Gold): ver config.py
+@st.cache_resource(show_spinner=False)
+def get_connections():
+    """Abre (una vez) las BBDD de Silver y Gold en solo lectura."""
+    cfg = load_config()
+    return (duckdb.connect(str(cfg.silver_db), read_only=True),
+            duckdb.connect(str(cfg.gold_db), read_only=True))
+
+try:
+    _silver, _gold = get_connections()
+except duckdb.Error as err:
+    logger.error("No se pudo abrir la BBDD: %s", err)
+    st.error(f'No se pudo abrir la base de datos (entorno "{load_config().env}"). '
+             'Comprueba que existen las copias en data/dev/ (tarea N-23).')
+    st.stop()
+
+# Un cursor por ejecución de la página (las conexiones compartidas no son seguras entre sesiones)
+# Silver
+con = _silver.cursor()
+# Gold
+conn = _gold.cursor()
+# Basic Query
 data_experiment_df = con.execute(query_basic).df()
 
 

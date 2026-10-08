@@ -1,6 +1,7 @@
 # IMPORTS LIBRARIES
 import pandas as pd
 import hmac
+import logging
 import io
 import os
 import json
@@ -22,6 +23,8 @@ from modules import notion_utils as notion
 from modules import electrical_read_transform as elecr
 from modules import electrical_processing as elecp
 from modules import optical_read_transform as op
+from modules import extract_data as extract
+from config import load_config, LOGO_PATH
 from modules.drive_utils import (
     get_drive, download_file_bytes, upload_bytes_to_folder
 )
@@ -30,6 +33,8 @@ from modules.drive_utils import (
 # DEFINITION
 # General
 main_page = "main.py"
+# Hasta validar la ingesta nueva (Fase 3) el botón solo informa de lo que haría: no escribe en BBDD, Drive ni Notion.
+PIPELINE_DRY_RUN = True
 #config = dotenv_values('.env')
 
 # Electrical measurement
@@ -149,13 +154,15 @@ def obtain_page_names():
 
 # MAIN FUNCTION
 def main():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+
     # STREAMLIT CODE
     # Config streamlit page
     st.set_page_config(
         page_title='Home',
         page_icon='🏠')
     add_logo()
-    st.logo('./img/NoySI.png', size="medium")
+    st.logo(str(LOGO_PATH), size="medium")
 
     # Inicializate 'authentication_status' variable
     if 'authentication_status' not in st.session_state:
@@ -190,8 +197,10 @@ def main():
         # OPTICAL MEASUREMENT
         #op.read_transform_optical('time', 'MethaneLine', path_optical_methane_line)
 
-        extract.run_data_pipeline()
-        pass
+        cfg = load_config()
+        drive = get_drive(cfg)
+        summary = extract.run_data_pipeline(cfg, drive, engine=None, dry_run=PIPELINE_DRY_RUN)
+        st.write(summary)
         
 
 

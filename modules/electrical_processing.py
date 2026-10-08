@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import datetime
+import logging
 # File import
 #from nptdms import TdmsFile   # Import tdms files
 #import requests   # Make http GET and POST requests
@@ -23,6 +24,7 @@ import scipy #import signal
 #import statsmodels.api as sm
 #from scipy.interpolate import interp1d
 
+logger = logging.getLogger(__name__)
 
 
 # AUXILIARY FUNCTIONS
@@ -145,7 +147,7 @@ def write_df_to_db(con, df, table_name, query_write):
         values = tuple(row)
         # Build the writing query
         query = query_write.format(table_name=table_name, columns=columns, values=values)
-        print(query)
+        logger.debug('Consulta: %s', query)
         con.execute(query)
 
 

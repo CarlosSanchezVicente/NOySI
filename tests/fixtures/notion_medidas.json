@@ -1,0 +1,52 @@
+{
+  "object": "list",
+  "has_more": false,
+  "next_cursor": null,
+  "results": [
+    {
+      "id": "00000000-0000-0000-0000-00000000000a",
+      "created_time": "2024-01-15T10:00:00.000Z",
+      "last_edited_time": "2024-01-16T11:30:00.000Z",
+      "created_by": {"object": "user", "id": "00000000-0000-0000-0000-0000000000u1"},
+      "last_edited_by": {"object": "user", "id": "00000000-0000-0000-0000-0000000000u2"},
+      "parent": {"type": "database_id", "database_id": "00000000-0000-0000-0000-0000000000d1"},
+      "url": "https://example.invalid/medida-a",
+      "properties": {
+        "Título": {"id": "t1", "type": "title", "title": [{"type": "text", "text": {"content": "Medida sintética A"}}]},
+        "Comentario": {"id": "r1", "type": "rich_text", "rich_text": [{"type": "text", "text": {"content": "Texto de prueba"}}]},
+        "Proporción": {"id": "n1", "type": "number", "number": 2.5},
+        "BET (m2/g)": {"id": "n2", "type": "number", "number": null},
+        "Humedad": {"id": "s1", "type": "select", "select": {"name": "50%"}},
+        "Etiquetas": {"id": "m1", "type": "multi_select", "multi_select": [{"name": "CO2"}, {"name": "NH3"}]},
+        "Sensor": {"id": "l1", "type": "relation", "relation": [{"id": "00000000-0000-0000-0000-0000000000s1"}]},
+        "Led": {"id": "l2", "type": "relation", "relation": []},
+        "Realizado": {"id": "d1", "type": "date", "date": {"start": "2024-01-15", "end": null}},
+        "ID_conn": {"id": "u1", "type": "unique_id", "unique_id": {"prefix": "MED", "number": 1}}
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-00000000000b",
+      "created_time": "2024-02-01T09:00:00.000Z",
+      "last_edited_time": "2024-02-01T09:30:00.000Z",
+      "created_by": {"object": "user", "id": "00000000-0000-0000-0000-0000000000u1"},
+      "last_edited_by": {"object": "user", "id": "00000000-0000-0000-0000-0000000000u1"},
+      "parent": {"type": "database_id", "database_id": "00000000-0000-0000-0000-0000000000d1"},
+      "url": "https://example.invalid/medida-b",
+      "properties": {
+        "Título": {"id": "t1", "type": "title", "title": []},
+        "Comentario": {"id": "r1", "type": "rich_text", "rich_text": []},
+        "Proporción": {"id": "n1", "type": "number", "number": null},
+        "BET (m2/g)": {"id": "n2", "type": "number", "number": 120},
+        "Humedad": {"id": "s1", "type": "select", "select": null},
+        "Etiquetas": {"id": "m1", "type": "multi_select", "multi_select": [{"name": "CH4"}]},
+        "Sensor": {"id": "l1", "type": "relation", "relation": [
+          {"id": "00000000-0000-0000-0000-0000000000s2"},
+          {"id": "00000000-0000-0000-0000-0000000000s3"}
+        ]},
+        "Led": {"id": "l2", "type": "relation", "relation": [{"id": "00000000-0000-0000-0000-0000000000e1"}]},
+        "Realizado": {"id": "d1", "type": "date", "date": null},
+        "ID_conn": {"id": "u1", "type": "unique_id", "unique_id": {"prefix": "MED", "number": 123}}
+      }
+    }
+  ]
+}

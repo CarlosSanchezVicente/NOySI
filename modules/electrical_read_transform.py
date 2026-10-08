@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import datetime
+import logging
 # File import
 from nptdms import TdmsFile   # Import tdms files
 #import requests   # Make http GET and POST requests
@@ -17,6 +18,8 @@ import streamlit as st
 # Processing
 #import scipy 
 #import signal
+
+logger = logging.getLogger(__name__)
 
 # IMPORT FUNCTIONS FROM MODULES
 from modules import read_directory as dir
@@ -56,7 +59,7 @@ def read_data_store_data(complete_path_source, name_dataframe, line):
             new_data[channel.name] = channel[:].tolist()
     
     # Transform the dictionary to dataframe
-    print('Nombre: ', name_dataframe)
+    logger.info('Nombre: %s', name_dataframe)
     new_df = pd.DataFrame(new_data)
     
     # Store this dataframe in bronze folder
@@ -145,7 +148,7 @@ def obtain_data_electrical_m(process_type, ID_dict, line, path):
         # Obtain the complete path and name for each experiment
         complete_path_source = row['path']
         name_dataframe = row['name']
-        print('Path: ', complete_path_source, ' | Dataframe name: ', name_dataframe)
+        logger.info('Path: %s | Dataframe name: %s', complete_path_source, name_dataframe)
 
         # Extract data from tdms and store the data in bronze folder
         new_data = read_data_store_data(complete_path_source, name_dataframe, line)
@@ -187,7 +190,7 @@ def obtain_data_electrical_m(process_type, ID_dict, line, path):
         data_df['ID'] = range(last_ID_value, len(data_df) + last_ID_value)
 
     # Build the query
-    print(table_name)
+    logger.info('Tabla: %s', table_name)
     query_write = """
         INSERT INTO {table_name} ({columns})
         VALUES {values};
