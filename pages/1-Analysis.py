@@ -306,7 +306,7 @@ def select_concentration_to_plot(df, concentration, wavelength_numbers_df):
 
 
 # CONNECTION TO DATABASE
-# Las rutas dependen de NOYSI_ENV (dev -> data/dev/*_dev.db, prod -> data/Silver y data/Gold): ver config.py
+# Las rutas de las BBDD vienen de config.py (data/Silver/LabSilver.db y data/Gold/LabGold.db)
 @st.cache_resource(show_spinner=False)
 def get_connections():
     """Abre (una vez) las BBDD de Silver y Gold en solo lectura."""
@@ -319,7 +319,7 @@ try:
 except duckdb.Error as err:
     logger.error("No se pudo abrir la BBDD: %s", err)
     st.error(f'No se pudo abrir la base de datos (entorno "{load_config().env}"). '
-             'Comprueba que existen las copias en data/dev/ (tarea N-23).')
+             'Comprueba que existen data/Silver/LabSilver.db y data/Gold/LabGold.db.')
     st.stop()
 
 # Un cursor por ejecución de la página (las conexiones compartidas no son seguras entre sesiones)

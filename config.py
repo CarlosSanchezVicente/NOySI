@@ -114,10 +114,9 @@ def load_config(secrets=None):
     else:
         database_url = os.environ.get("NOYSI_DEV_DATABASE_URL", "")
 
-    if env == "prod":
-        silver, gold = ROOT / "data/Silver/LabSilver.db", ROOT / "data/Gold/LabGold.db"
-    else:
-        silver, gold = ROOT / "data/dev/LabSilver_dev.db", ROOT / "data/dev/LabGold_dev.db"
+    # Decisión 2026-10-08: las BBDD actuales sirven también para desarrollo (se sustituirán por una
+    # carga completa nueva en PostgreSQL), así que dev y prod comparten las rutas de los SQLite.
+    silver, gold = ROOT / "data/Silver/LabSilver.db", ROOT / "data/Gold/LabGold.db"
 
     return Config(
         env=env,

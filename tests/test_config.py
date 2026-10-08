@@ -24,7 +24,7 @@ def test_valores_por_defecto_seguros():
     assert cfg.enable_external_writes is False
     assert cfg.drive_scopes == (config.DRIVE_READ_SCOPE,)
     assert cfg.database_url == ""
-    assert cfg.silver_db.name == "LabSilver_dev.db" and cfg.gold_db.name == "LabGold_dev.db"
+    assert cfg.silver_db.name == "LabSilver.db" and cfg.gold_db.name == "LabGold.db"
 
 
 def test_dev_ignora_database_url_de_secrets():
